@@ -1,0 +1,24 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# 01_bases_acredita
+
+<!-- badges: start -->
+
+<!-- badges: end -->
+
+## ¿Cómo reproducir esta sintaxis?
+
+1.  Descargar R, R Studio, R tools, Quarto.
+2.  Descargar el proyecto de Github aito123/01_bases_acredita del siguiente link: <https://github.com/aito123/01_bases_acredita>
+3.  Reproducir el archivo 01_bases_acredita.qmd.

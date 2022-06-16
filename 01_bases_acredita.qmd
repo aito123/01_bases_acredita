@@ -1,7 +1,7 @@
 ---
 title: "Unión de bases de datos - Acreditación"
 author: "Santiago Sotelo"
-date: "6/9/2022"
+date: "6/16/2022"
 format: 
   html: default
   pdf: 
@@ -9,15 +9,21 @@ format:
 lang: es
 toc: true
 toc-location: left
+execute:
+  cache: true
+  # eval: false
+  # tidy: true
 ---
 
 # ¿Cómo reproducir esta sintaxis?
 
 1.  Descargar R, R Studio, R tools, Quarto.
-2.  Descargar el proyecto de Github `aito123/01_bases_acredita` del siguiente link:
+2.  Descargar el proyecto de Github `aito123/01_bases_acredita` del siguiente link: https://github.com/aito123/01_bases_acredita
 3.  Reproducir el archivo `01_bases_acredita.qmd`.
 
 # Setup
+
+Se instalan los paquetes necesarios para la manipulación de data y se fija el directorio de trabajo.
 
 ```{r}
 #| label: setup
@@ -50,6 +56,8 @@ Se importan las ocho (8) bases de datos correspondientes a las encuestas de Acre
 -   **Personal Administrativo**
     -   PUCP
 
+En todos los casos se crea una columna `publico` que servirá como identificadora de cada público objetivo.
+
 ```{r}
 #| label: importar bases de datos
 
@@ -72,6 +80,8 @@ doc_centrum<-read_sav("data/bases_finales/10_2022. DAA - Acreditación Instituci
 ```
 
 # Limpieza inicial de bases de datos
+
+Se completan las etiquetas faltantes en cada base de datos utilizando como referencia los cuestionarios respectivos.
 
 ```{r}
 #| label: limpieza inicial bases
@@ -157,6 +167,8 @@ doc_centrum2<-
 
 # Diccionario de bases de datos
 
+Se elabora un diccionario de códigos que incluya a las variables de todas las bases de datos. De esta manera, se podrán comparar las iguales y renombrarlas con el mismo nombre. El proceso de renombramiento de la variable y su etiqueta se realiza en un excel aparte de manera manual y con criterio. Puede revisar el excel de renombramiento en la ruta del proyecto: `01_bases_acredita/data/bases_finales/diccionario_bases_de_datos_general.xlsx`
+
 ```{r}
 #| label: diccionarios
 #| eval: false
@@ -182,7 +194,13 @@ diccionarios %>%
          overwrite=TRUE)
 ```
 
-# Limpieza alumnos pregrado
+Una vez renombradas y re-etiquetadas las variables se procede a aplicar el renombramiento a cada una de las bases de datos considerando la numeración específica de las preguntas.
+
+# Limpieza específica
+
+## Alumnos pregrado
+
+Se aplica el renombramiento en la base de datos de los alumnos de pregrado, la cual contiene 4458 observaciones y 103 variables.
 
 ```{r}
 #| label: limpieza profunda alumnos pregrado1
@@ -400,7 +418,9 @@ alum_pre3<-
   
 ```
 
-# Limpieza alumnos posgrado
+## Alumnos posgrado
+
+Se aplica el renombramiento en la base de datos de los alumnos de posgrado, la cual contiene 366 observaciones y 103 variables.
 
 ```{r}
 #| label: limpieza profunda alumnos posgrado1
@@ -617,7 +637,9 @@ alum_pos3<-
   )
 ```
 
-# Limpieza alumnos CENTRUM
+## Alumnos CENTRUM
+
+Se aplica el renombramiento en la base de datos de los alumnos de posgrado CENTRUM, la cual contiene 250 observaciones y 94 variables.
 
 ```{r}
 #| label: limpieza profunda alumnos centrum1
@@ -818,7 +840,9 @@ alum_centrum3<-
 
 ```
 
-# Docentes PUCP
+## Docentes PUCP
+
+Se aplica el renombramiento en la base de datos de los docentes PUCP, la cual contiene 698 observaciones y 76 variables.
 
 ```{r}
 #| label: limpieza profunda docentes pucp1
@@ -980,7 +1004,9 @@ doc3<-
   )
 ```
 
-# Docentes CENTRUM
+## Docentes CENTRUM
+
+Se aplica el renombramiento en la base de datos de los docentes CENTRUM, la cual contiene 36 observaciones y 74 variables.
 
 ```{r}
 #| label: limpieza profunda docentes centrum1
@@ -1139,7 +1165,9 @@ doc_centrum3<-
   )
 ```
 
-# Egresados posgrado
+## Egresados posgrado
+
+Se aplica el renombramiento en la base de datos de los egresados posgrado, la cual contiene 132 observaciones y 62 variables.
 
 ```{r}
 #| label: limpieza profunda egresados posgrado1
@@ -1274,7 +1302,9 @@ egre_pos3<-
   )
 ```
 
-# Egresados CENTRUM
+## Egresados CENTRUM
+
+Se aplica el renombramiento en la base de datos de los egresados CENTRUM, la cual contiene 107 observaciones y 70 variables.
 
 ```{r}
 #| label: limpieza profunda egresados centrum1
@@ -1425,7 +1455,9 @@ egre_centrum3<-
   )
 ```
 
-# Limpieza personal administrativo
+## Personal administrativo
+
+Se aplica el renombramiento en la base de datos del personal administrativo, la cual contiene 1107 observaciones y 93 variables.
 
 ```{r}
 #| label: limpieza profunda admin1
@@ -1625,6 +1657,8 @@ admin3<-
 
 # Unión de bases de datos
 
+Se realiza la unión de las bases de datos de todos los públicos objetivos en una sola base. Las variables únicas de cada actor son preservadas en la base final y completada para los demás actores con valores perdidos. Asimismo, se elabora un diccionario de códigos final con el nombre y etiqueta de las variables, y el nombre y etiqueta de los valores. Por último, saltan a la vista un total de 29 alertas por parte de la función empleada para unir las bases de datos. Esto significa que las etiquetas de los valores no son exactamente los mismos en 29 variables comunes. Luego de revisar cada una de estas variables, concluyo que no es un problema para la base final dado que las etiquetas varían por un espacio en algunos casos (por ejemplo: `No sabe /No aplica = 3` y `No sabe / No aplica = 3`). En estos casos, la función elige una de las dos etiquetas para el valor que representa.
+
 ```{r}
 #| label: diccionario final
 
@@ -1651,3 +1685,7 @@ dic_acredita_base %>%
          asTable=TRUE,
          overwrite=TRUE)
 ```
+
+La base de datos final contiene 7154 observaciones y 218 variables, por lo que se concluye que todas las observaciones se encuentran presentes:
+
+`4458+366+250+698+36+132+107+1107=7154`

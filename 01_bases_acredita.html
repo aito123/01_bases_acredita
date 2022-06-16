@@ -96,15 +96,19 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <li><a href="#cómo-reproducir-esta-sintaxis" id="toc-cómo-reproducir-esta-sintaxis" class="nav-link active" data-scroll-target="#cómo-reproducir-esta-sintaxis">¿Cómo reproducir esta sintaxis?</a></li>
   <li><a href="#setup" id="toc-setup" class="nav-link" data-scroll-target="#setup">Setup</a></li>
   <li><a href="#importar-bases-de-datos" id="toc-importar-bases-de-datos" class="nav-link" data-scroll-target="#importar-bases-de-datos">Importar bases de datos</a></li>
-  <li><a href="#limpieza-inicial-y-diccionario-de-bases-de-datos" id="toc-limpieza-inicial-y-diccionario-de-bases-de-datos" class="nav-link" data-scroll-target="#limpieza-inicial-y-diccionario-de-bases-de-datos">Limpieza inicial y diccionario de bases de datos</a></li>
-  <li><a href="#limpieza-alumnos-pregrado" id="toc-limpieza-alumnos-pregrado" class="nav-link" data-scroll-target="#limpieza-alumnos-pregrado">Limpieza alumnos pregrado</a></li>
-  <li><a href="#limpieza-alumnos-posgrado" id="toc-limpieza-alumnos-posgrado" class="nav-link" data-scroll-target="#limpieza-alumnos-posgrado">Limpieza alumnos posgrado</a></li>
-  <li><a href="#limpieza-alumnos-centrum" id="toc-limpieza-alumnos-centrum" class="nav-link" data-scroll-target="#limpieza-alumnos-centrum">Limpieza alumnos CENTRUM</a></li>
+  <li><a href="#limpieza-inicial-de-bases-de-datos" id="toc-limpieza-inicial-de-bases-de-datos" class="nav-link" data-scroll-target="#limpieza-inicial-de-bases-de-datos">Limpieza inicial de bases de datos</a></li>
+  <li><a href="#diccionario-de-bases-de-datos" id="toc-diccionario-de-bases-de-datos" class="nav-link" data-scroll-target="#diccionario-de-bases-de-datos">Diccionario de bases de datos</a></li>
+  <li><a href="#limpieza-específica" id="toc-limpieza-específica" class="nav-link" data-scroll-target="#limpieza-específica">Limpieza específica</a>
+  <ul class="collapse">
+  <li><a href="#alumnos-pregrado" id="toc-alumnos-pregrado" class="nav-link" data-scroll-target="#alumnos-pregrado">Alumnos pregrado</a></li>
+  <li><a href="#alumnos-posgrado" id="toc-alumnos-posgrado" class="nav-link" data-scroll-target="#alumnos-posgrado">Alumnos posgrado</a></li>
+  <li><a href="#alumnos-centrum" id="toc-alumnos-centrum" class="nav-link" data-scroll-target="#alumnos-centrum">Alumnos CENTRUM</a></li>
   <li><a href="#docentes-pucp" id="toc-docentes-pucp" class="nav-link" data-scroll-target="#docentes-pucp">Docentes PUCP</a></li>
   <li><a href="#docentes-centrum" id="toc-docentes-centrum" class="nav-link" data-scroll-target="#docentes-centrum">Docentes CENTRUM</a></li>
   <li><a href="#egresados-posgrado" id="toc-egresados-posgrado" class="nav-link" data-scroll-target="#egresados-posgrado">Egresados posgrado</a></li>
   <li><a href="#egresados-centrum" id="toc-egresados-centrum" class="nav-link" data-scroll-target="#egresados-centrum">Egresados CENTRUM</a></li>
-  <li><a href="#limpieza-personal-administrativo" id="toc-limpieza-personal-administrativo" class="nav-link" data-scroll-target="#limpieza-personal-administrativo">Limpieza personal administrativo</a></li>
+  <li><a href="#personal-administrativo" id="toc-personal-administrativo" class="nav-link" data-scroll-target="#personal-administrativo">Personal administrativo</a></li>
+  </ul></li>
   <li><a href="#unión-de-bases-de-datos" id="toc-unión-de-bases-de-datos" class="nav-link" data-scroll-target="#unión-de-bases-de-datos">Unión de bases de datos</a></li>
   </ul>
 </nav>
@@ -132,7 +136,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <div>
     <div class="quarto-title-meta-heading">Fecha de Publicación</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">9 de junio de 2022</p>
+      <p class="date">16 de junio de 2022</p>
     </div>
   </div>
     
@@ -145,13 +149,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h1>¿Cómo reproducir esta sintaxis?</h1>
 <ol type="1">
 <li>Descargar R, R Studio, R tools, Quarto.</li>
-<li>Descargar el proyecto de Github <code>aito123/01_bases_acredita</code> del siguiente link:</li>
+<li>Descargar el proyecto de Github <code>aito123/01_bases_acredita</code> del siguiente link: https://github.com/aito123/01_bases_acredita</li>
 <li>Reproducir el archivo <code>01_bases_acredita.qmd</code>.</li>
 </ol>
 </section>
 <section id="setup" class="level1">
 <h1>Setup</h1>
-<div class="cell">
+<p>Se instalan los paquetes necesarios para la manipulación de data y se fija el directorio de trabajo.</p>
+<div class="cell" data-hash="01_bases_acredita_cache/html/setup_f8f1aa22b0ca0d2428d3a2bd34438996">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">require</span>(<span class="st">"pacman"</span>)) <span class="fu">install.packages</span>(<span class="st">"pacman"</span>)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(tidyverse, haven, sjlabelled, labelled, rio, here, janitor, glue)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>here<span class="sc">::</span><span class="fu">i_am</span>(<span class="st">"01_bases_acredita.qmd"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -182,7 +187,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li>PUCP</li>
 </ul></li>
 </ul>
-<div class="cell">
+<p>En todos los casos se crea una columna <code>publico</code> que servirá como identificadora de cada público objetivo.</p>
+<div class="cell" data-hash="01_bases_acredita_cache/html/importar bases de datos_fe18c6fb7820d9470d5c86c7796dcf06">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">#alumnos</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>alum_centrum<span class="ot">&lt;-</span><span class="fu">read_sav</span>(<span class="st">"data/bases_finales/10_2022. DAA - Acreditación Institucional PUCP - estudiantes posgrado CENTRUM.sav"</span>) <span class="sc">%&gt;%</span> <span class="fu">clean_names</span>() <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">publico=</span><span class="st">"Estudiantes posgrado CENTRUM"</span>)</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>alum_pos<span class="ot">&lt;-</span><span class="fu">read_sav</span>(<span class="st">"data/bases_finales/10_2022. DAA - Acreditación Institucional PUCP - estudiantes posgrado.sav"</span>) <span class="sc">%&gt;%</span> <span class="fu">clean_names</span>() <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">publico=</span><span class="st">"Estudiantes posgrado"</span>)</span>
@@ -200,9 +206,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>doc_centrum<span class="ot">&lt;-</span><span class="fu">read_sav</span>(<span class="st">"data/bases_finales/10_2022. DAA - Acreditación Institucional PUCP - profesores CENTRUM.sav"</span>) <span class="sc">%&gt;%</span> <span class="fu">clean_names</span>() <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">publico=</span><span class="st">"Docentes CENTRUM"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="limpieza-inicial-y-diccionario-de-bases-de-datos" class="level1">
-<h1>Limpieza inicial y diccionario de bases de datos</h1>
-<div class="cell">
+<section id="limpieza-inicial-de-bases-de-datos" class="level1">
+<h1>Limpieza inicial de bases de datos</h1>
+<p>Se completan las etiquetas faltantes en cada base de datos utilizando como referencia los cuestionarios respectivos.</p>
+<div class="cell" data-hash="01_bases_acredita_cache/html/limpieza inicial bases_9f4a6e625c0dddb185425820ae20c497">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#alumnos</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>alum_pre2<span class="ot">&lt;-</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  alum_pre <span class="sc">%&gt;%</span> </span>
@@ -278,7 +285,11 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a>    <span class="fu">across</span>(q0026_0001, <span class="sc">~</span> <span class="fu">set_label</span>(., <span class="at">label =</span> <span class="st">"En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique su nivel de satisfacción con los equipos informáticos de la PUCP:"</span>)),</span>
 <span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell">
+</section>
+<section id="diccionario-de-bases-de-datos" class="level1">
+<h1>Diccionario de bases de datos</h1>
+<p>Se elabora un diccionario de códigos que incluya a las variables de todas las bases de datos. De esta manera, se podrán comparar las iguales y renombrarlas con el mismo nombre. El proceso de renombramiento de la variable y su etiqueta se realiza en un excel aparte de manera manual y con criterio. Puede revisar el excel de renombramiento en la ruta del proyecto: <code>01_bases_acredita/data/bases_finales/diccionario_bases_de_datos_general.xlsx</code></p>
+<div class="cell" data-hash="01_bases_acredita_cache/html/diccionarios_9098b5b50c69cd53fff3b0f3718c7ca3">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>diccionarios<span class="ot">&lt;-</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>(</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    alum_pre2 <span class="sc">%&gt;%</span> <span class="fu">look_for</span>() <span class="sc">%&gt;%</span> <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">actor=</span><span class="st">"alumno pregrado"</span>),</span>
@@ -299,10 +310,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>         <span class="at">asTable=</span><span class="cn">TRUE</span>,</span>
 <span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>         <span class="at">overwrite=</span><span class="cn">TRUE</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>Una vez renombradas y re-etiquetadas las variables se procede a aplicar el renombramiento a cada una de las bases de datos considerando la numeración específica de las preguntas.</p>
 </section>
-<section id="limpieza-alumnos-pregrado" class="level1">
-<h1>Limpieza alumnos pregrado</h1>
-<div class="cell">
+<section id="limpieza-específica" class="level1">
+<h1>Limpieza específica</h1>
+<section id="alumnos-pregrado" class="level2">
+<h2 class="anchored" data-anchor-id="alumnos-pregrado">Alumnos pregrado</h2>
+<p>Se aplica el renombramiento en la base de datos de los alumnos de pregrado, la cual contiene 4458 observaciones y 103 variables.</p>
+<div class="cell" data-hash="01_bases_acredita_cache/html/limpieza profunda alumnos pregrado1_5a094abbf89826a4e105e98f227c658c">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>alum_pre3<span class="ot">&lt;-</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  alum_pre2 <span class="sc">%&gt;%</span> </span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename_with</span>( <span class="sc">~</span> <span class="fu">str_replace</span>(.x, <span class="at">pattern =</span> <span class="st">'q0001'</span>, <span class="at">replacement =</span> <span class="st">'aclaracion'</span>), <span class="fu">matches</span>( <span class="st">'</span><span class="sc">\\</span><span class="st">b(q0001)</span><span class="sc">\\</span><span class="st">b'</span>)) <span class="sc">%&gt;%</span> </span>
@@ -515,9 +530,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb5-210"><a href="#cb5-210" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="limpieza-alumnos-posgrado" class="level1">
-<h1>Limpieza alumnos posgrado</h1>
-<div class="cell">
+<section id="alumnos-posgrado" class="level2">
+<h2 class="anchored" data-anchor-id="alumnos-posgrado">Alumnos posgrado</h2>
+<p>Se aplica el renombramiento en la base de datos de los alumnos de posgrado, la cual contiene 366 observaciones y 103 variables.</p>
+<div class="cell" data-hash="01_bases_acredita_cache/html/limpieza profunda alumnos posgrado1_5595a0d3d74e92ae0d232ff4a2c7921c">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>alum_pos3<span class="ot">&lt;-</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  alum_pos2 <span class="sc">%&gt;%</span> </span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename_with</span>( <span class="sc">~</span> <span class="fu">str_replace</span>(.x, <span class="at">pattern =</span> <span class="st">'q0001'</span>, <span class="at">replacement =</span> <span class="st">'aclaracion'</span>), <span class="fu">matches</span>( <span class="st">'</span><span class="sc">\\</span><span class="st">b(q0001)</span><span class="sc">\\</span><span class="st">b'</span>)) <span class="sc">%&gt;%</span> </span>
@@ -730,9 +746,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb6-210"><a href="#cb6-210" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="limpieza-alumnos-centrum" class="level1">
-<h1>Limpieza alumnos CENTRUM</h1>
-<div class="cell">
+<section id="alumnos-centrum" class="level2">
+<h2 class="anchored" data-anchor-id="alumnos-centrum">Alumnos CENTRUM</h2>
+<p>Se aplica el renombramiento en la base de datos de los alumnos de posgrado CENTRUM, la cual contiene 250 observaciones y 94 variables.</p>
+<div class="cell" data-hash="01_bases_acredita_cache/html/limpieza profunda alumnos centrum1_023dcd1eb6ad894efbf082db95e0d851">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>alum_centrum3<span class="ot">&lt;-</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  alum_centrum2 <span class="sc">%&gt;%</span> </span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename_with</span>( <span class="sc">~</span> <span class="fu">str_replace</span>(.x, <span class="at">pattern =</span> <span class="st">'q0001'</span>, <span class="at">replacement =</span> <span class="st">'aclaracion'</span>), <span class="fu">matches</span>( <span class="st">'</span><span class="sc">\\</span><span class="st">b(q0001)</span><span class="sc">\\</span><span class="st">b'</span>)) <span class="sc">%&gt;%</span> </span>
@@ -927,9 +944,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb7-192"><a href="#cb7-192" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="docentes-pucp" class="level1">
-<h1>Docentes PUCP</h1>
-<div class="cell">
+<section id="docentes-pucp" class="level2">
+<h2 class="anchored" data-anchor-id="docentes-pucp">Docentes PUCP</h2>
+<p>Se aplica el renombramiento en la base de datos de los docentes PUCP, la cual contiene 698 observaciones y 76 variables.</p>
+<div class="cell" data-hash="01_bases_acredita_cache/html/limpieza profunda docentes pucp1_769ae65ad19c71cd7821ca01b44e4c17">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>doc3<span class="ot">&lt;-</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  doc2 <span class="sc">%&gt;%</span> </span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename_with</span>( <span class="sc">~</span> <span class="fu">str_replace</span>(.x, <span class="at">pattern =</span> <span class="st">'q0001'</span>, <span class="at">replacement =</span> <span class="st">'aclaracion'</span>), <span class="fu">matches</span>( <span class="st">'</span><span class="sc">\\</span><span class="st">b(q0001)</span><span class="sc">\\</span><span class="st">b'</span>)) <span class="sc">%&gt;%</span> </span>
@@ -1088,9 +1106,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb8-156"><a href="#cb8-156" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="docentes-centrum" class="level1">
-<h1>Docentes CENTRUM</h1>
-<div class="cell">
+<section id="docentes-centrum" class="level2">
+<h2 class="anchored" data-anchor-id="docentes-centrum">Docentes CENTRUM</h2>
+<p>Se aplica el renombramiento en la base de datos de los docentes CENTRUM, la cual contiene 36 observaciones y 74 variables.</p>
+<div class="cell" data-hash="01_bases_acredita_cache/html/limpieza profunda docentes centrum1_9ba7f989cfdd948d19582ac874f81ec9">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>doc_centrum3<span class="ot">&lt;-</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  doc_centrum2 <span class="sc">%&gt;%</span> </span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename_with</span>( <span class="sc">~</span> <span class="fu">str_replace</span>(.x, <span class="at">pattern =</span> <span class="st">'q0001'</span>, <span class="at">replacement =</span> <span class="st">'aclaracion'</span>), <span class="fu">matches</span>( <span class="st">'</span><span class="sc">\\</span><span class="st">b(q0001)</span><span class="sc">\\</span><span class="st">b'</span>)) <span class="sc">%&gt;%</span> </span>
@@ -1245,9 +1264,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb9-152"><a href="#cb9-152" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="egresados-posgrado" class="level1">
-<h1>Egresados posgrado</h1>
-<div class="cell">
+<section id="egresados-posgrado" class="level2">
+<h2 class="anchored" data-anchor-id="egresados-posgrado">Egresados posgrado</h2>
+<p>Se aplica el renombramiento en la base de datos de los egresados posgrado, la cual contiene 132 observaciones y 62 variables.</p>
+<div class="cell" data-hash="01_bases_acredita_cache/html/limpieza profunda egresados posgrado1_fbe40e55e9ee992b5da97bd796297573">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>egre_pos3<span class="ot">&lt;-</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  egre_pos2 <span class="sc">%&gt;%</span> </span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename_with</span>( <span class="sc">~</span> <span class="fu">str_replace</span>(.x, <span class="at">pattern =</span> <span class="st">'q0001'</span>, <span class="at">replacement =</span> <span class="st">'aclaracion'</span>), <span class="fu">matches</span>( <span class="st">'</span><span class="sc">\\</span><span class="st">b(q0001)</span><span class="sc">\\</span><span class="st">b'</span>)) <span class="sc">%&gt;%</span> </span>
@@ -1378,9 +1398,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb10-128"><a href="#cb10-128" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="egresados-centrum" class="level1">
-<h1>Egresados CENTRUM</h1>
-<div class="cell">
+<section id="egresados-centrum" class="level2">
+<h2 class="anchored" data-anchor-id="egresados-centrum">Egresados CENTRUM</h2>
+<p>Se aplica el renombramiento en la base de datos de los egresados CENTRUM, la cual contiene 107 observaciones y 70 variables.</p>
+<div class="cell" data-hash="01_bases_acredita_cache/html/limpieza profunda egresados centrum1_12aea5d9f0cf634f7b4ccbbcd2401eab">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>egre_centrum3<span class="ot">&lt;-</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  egre_centrum2 <span class="sc">%&gt;%</span> </span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename_with</span>( <span class="sc">~</span> <span class="fu">str_replace</span>(.x, <span class="at">pattern =</span> <span class="st">'q0001'</span>, <span class="at">replacement =</span> <span class="st">'aclaracion'</span>), <span class="fu">matches</span>( <span class="st">'</span><span class="sc">\\</span><span class="st">b(q0001)</span><span class="sc">\\</span><span class="st">b'</span>)) <span class="sc">%&gt;%</span> </span>
@@ -1527,9 +1548,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb11-144"><a href="#cb11-144" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="limpieza-personal-administrativo" class="level1">
-<h1>Limpieza personal administrativo</h1>
-<div class="cell">
+<section id="personal-administrativo" class="level2">
+<h2 class="anchored" data-anchor-id="personal-administrativo">Personal administrativo</h2>
+<p>Se aplica el renombramiento en la base de datos del personal administrativo, la cual contiene 1107 observaciones y 93 variables.</p>
+<div class="cell" data-hash="01_bases_acredita_cache/html/limpieza profunda admin1_8e892de6b187d3dba0fa41106c940f44">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>admin3<span class="ot">&lt;-</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  admin2 <span class="sc">%&gt;%</span> </span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a> <span class="fu">rename_with</span>( <span class="sc">~</span> <span class="fu">str_replace</span>(.x, <span class="at">pattern =</span> <span class="st">'q0001'</span>, <span class="at">replacement =</span> <span class="st">'aclaracion'</span>), <span class="fu">matches</span>( <span class="st">'</span><span class="sc">\\</span><span class="st">b(q0001)</span><span class="sc">\\</span><span class="st">b'</span>)) <span class="sc">%&gt;%</span> </span>
@@ -1722,103 +1744,146 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb12-190"><a href="#cb12-190" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
+</section>
 <section id="unión-de-bases-de-datos" class="level1">
 <h1>Unión de bases de datos</h1>
-<div class="cell">
+<p>Se realiza la unión de las bases de datos de todos los públicos objetivos en una sola base. Las variables únicas de cada actor son preservadas en la base final y completada para los demás actores con valores perdidos. Asimismo, se elabora un diccionario de códigos final con el nombre y etiqueta de las variables, y el nombre y etiqueta de los valores. Por último, saltan a la vista un total de 29 alertas por parte de la función empleada para unir las bases de datos. Esto significa que las etiquetas de los valores no son exactamente los mismos en 29 variables comunes. Luego de revisar cada una de estas variables, concluyo que no es un problema para la base final dado que las etiquetas varían por un espacio en algunos casos (por ejemplo: <code>No sabe /No aplica = 3</code> y <code>No sabe / No aplica = 3</code>). En estos casos, la función elige una de las dos etiquetas para el valor que representa.</p>
+<div class="cell" data-hash="01_bases_acredita_cache/html/diccionario final_f089f46acbefceeb3080ac706827eb45">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>acredita_base<span class="ot">&lt;-</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>(alum_pre3, alum_centrum3, doc3, doc_centrum3, egre_pos3, egre_centrum3, admin3)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  sjmisc<span class="sc">::</span><span class="fu">add_rows</span>(alum_pre3, alum_pos3, alum_centrum3, </span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>                    doc3, doc_centrum3, </span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>                    egre_pos3, egre_centrum3, </span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>                    admin3</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>                    ) <span class="sc">%&gt;%</span> </span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">relocate</span>(publico, <span class="at">.before=</span><span class="fu">everything</span>())</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Warning: `..1$comunica_inst_satisf` and `..2$comunica_inst_satisf` have conflicting
+<pre><code>Warning: `..1$deporte_util` and `..2$deporte_util` have conflicting value labels.
+ℹ Labels for these values will be taken from `..1$deporte_util`.
+✖ Values: 3</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: `..1$salud_util` and `..2$salud_util` have conflicting value labels.
+ℹ Labels for these values will be taken from `..1$salud_util`.
+✖ Values: 3</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: `..1$psico_util` and `..2$psico_util` have conflicting value labels.
+ℹ Labels for these values will be taken from `..1$psico_util`.
+✖ Values: 3</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: `..1$becas_util` and `..2$becas_util` have conflicting value labels.
+ℹ Labels for these values will be taken from `..1$becas_util`.
+✖ Values: 3</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: `..1$socio_econ_util` and `..2$socio_econ_util` have conflicting value labels.
+ℹ Labels for these values will be taken from `..1$socio_econ_util`.
+✖ Values: 3</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: `..1$empleabilidad_util` and `..2$empleabilidad_util` have conflicting value
+labels.
+ℹ Labels for these values will be taken from `..1$empleabilidad_util`.
+✖ Values: 3</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: `..1$comunica_inst_satisf` and `..3$comunica_inst_satisf` have conflicting
 value labels.
 ℹ Labels for these values will be taken from `..1$comunica_inst_satisf`.
 ✖ Values: 1 and 5</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Warning: `..1$comunica_inst_satisf` and `..4$comunica_inst_satisf` have conflicting
+<pre><code>Warning: `..1$comunica_inst_satisf` and `..5$comunica_inst_satisf` have conflicting
 value labels.
 ℹ Labels for these values will be taken from `..1$comunica_inst_satisf`.
 ✖ Values: 0</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Warning: `..1$comunica_inst_satisf` and `..7$comunica_inst_satisf` have conflicting
+<pre><code>Warning: `..1$comunica_inst_satisf` and `..8$comunica_inst_satisf` have conflicting
 value labels.
 ℹ Labels for these values will be taken from `..1$comunica_inst_satisf`.
 ✖ Values: 0 and 5</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Warning: `..1$deporte_util` and `..7$deporte_util` have conflicting value labels.
+<pre><code>Warning: `..1$deporte_util` and `..8$deporte_util` have conflicting value labels.
 ℹ Labels for these values will be taken from `..1$deporte_util`.
 ✖ Values: 3</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Warning: `..1$salud_util` and `..7$salud_util` have conflicting value labels.
+<pre><code>Warning: `..1$salud_util` and `..8$salud_util` have conflicting value labels.
 ℹ Labels for these values will be taken from `..1$salud_util`.
 ✖ Values: 3</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Warning: `..1$centuria_accesible` and `..7$centuria_accesible` have conflicting value
+<pre><code>Warning: `..1$centuria_accesible` and `..8$centuria_accesible` have conflicting value
 labels.
 ℹ Labels for these values will be taken from `..1$centuria_accesible`.
 ✖ Values: 3</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Warning: `..1$centuria_util` and `..7$centuria_util` have conflicting value labels.
+<pre><code>Warning: `..1$centuria_util` and `..8$centuria_util` have conflicting value labels.
 ℹ Labels for these values will be taken from `..1$centuria_util`.
 ✖ Values: 3</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Warning: `..1$sag_accesible` and `..7$sag_accesible` have conflicting value labels.
+<pre><code>Warning: `..1$sag_accesible` and `..8$sag_accesible` have conflicting value labels.
 ℹ Labels for these values will be taken from `..1$sag_accesible`.
 ✖ Values: 3</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Warning: `..1$sag_util` and `..7$sag_util` have conflicting value labels.
+<pre><code>Warning: `..1$sag_util` and `..8$sag_util` have conflicting value labels.
 ℹ Labels for these values will be taken from `..1$sag_util`.
 ✖ Values: 3</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Warning: `..1$sicop_accesible` and `..7$sicop_accesible` have conflicting value labels.
+<pre><code>Warning: `..1$sicop_accesible` and `..8$sicop_accesible` have conflicting value labels.
 ℹ Labels for these values will be taken from `..1$sicop_accesible`.
 ✖ Values: 3</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Warning: `..1$sicop_util` and `..7$sicop_util` have conflicting value labels.
+<pre><code>Warning: `..1$sicop_util` and `..8$sicop_util` have conflicting value labels.
 ℹ Labels for these values will be taken from `..1$sicop_util`.
 ✖ Values: 3</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Warning: `..1$cvpucp_accesible` and `..7$cvpucp_accesible` have conflicting value
+<pre><code>Warning: `..1$cvpucp_accesible` and `..8$cvpucp_accesible` have conflicting value
 labels.
 ℹ Labels for these values will be taken from `..1$cvpucp_accesible`.
 ✖ Values: 3</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Warning: `..1$cvpucp_util` and `..7$cvpucp_util` have conflicting value labels.
+<pre><code>Warning: `..1$cvpucp_util` and `..8$cvpucp_util` have conflicting value labels.
 ℹ Labels for these values will be taken from `..1$cvpucp_util`.
 ✖ Values: 3</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Warning: `..1$cisam_accesible` and `..7$cisam_accesible` have conflicting value labels.
+<pre><code>Warning: `..1$cisam_accesible` and `..8$cisam_accesible` have conflicting value labels.
 ℹ Labels for these values will be taken from `..1$cisam_accesible`.
 ✖ Values: 3</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Warning: `..1$cisam_util` and `..7$cisam_util` have conflicting value labels.
+<pre><code>Warning: `..1$cisam_util` and `..8$cisam_util` have conflicting value labels.
 ℹ Labels for these values will be taken from `..1$cisam_util`.
 ✖ Values: 3</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>acredita_base <span class="sc">%&gt;%</span> </span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">write_sav</span>(<span class="fu">here</span>(<span class="st">"data/bases_finales/acredita_base.sav"</span>))</span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>acredita_base <span class="sc">%&gt;%</span></span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  labelled<span class="sc">::</span><span class="fu">look_for</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>levels) <span class="sc">%&gt;%</span> </span>
-<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">everything</span>(), <span class="sc">~</span><span class="fu">as.character</span>(.))) <span class="sc">%&gt;%</span> </span>
-<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">export</span>(<span class="fu">here</span>(<span class="st">"data/bases_finales/diccionario_acredita_base.xlsx"</span>),</span>
-<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">asTable=</span><span class="cn">TRUE</span>,</span>
-<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>         <span class="at">overwrite=</span><span class="cn">TRUE</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>acredita_base <span class="sc">%&gt;%</span> </span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">write_sav</span>(<span class="fu">here</span>(<span class="st">"data/bases_finales/acredita_base.sav"</span>))</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>dic_acredita_base<span class="ot">&lt;-</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  acredita_base <span class="sc">%&gt;%</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>  labelled<span class="sc">::</span><span class="fu">look_for</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>levels) <span class="sc">%&gt;%</span> </span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">everything</span>(), <span class="sc">~</span><span class="fu">as.character</span>(.)))</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>dic_acredita_base <span class="sc">%&gt;%</span> </span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">export</span>(<span class="fu">here</span>(<span class="st">"data/bases_finales/diccionario_acredita_base.xlsx"</span>),</span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>         <span class="at">asTable=</span><span class="cn">TRUE</span>,</span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a>         <span class="at">overwrite=</span><span class="cn">TRUE</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>La base de datos final contiene 7154 observaciones y 218 variables, por lo que se concluye que todas las observaciones se encuentran presentes:</p>
+<p><code>4458+366+250+698+36+132+107+1107=7154</code></p>
 </section>
 
 </main>
