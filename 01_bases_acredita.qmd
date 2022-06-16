@@ -1,0 +1,1653 @@
+---
+title: "Unión de bases de datos - Acreditación"
+author: "Santiago Sotelo"
+date: "6/9/2022"
+format: 
+  html: default
+  pdf: 
+    fontfamily: libertinus
+lang: es
+toc: true
+toc-location: left
+---
+
+# ¿Cómo reproducir esta sintaxis?
+
+1.  Descargar R, R Studio, R tools, Quarto.
+2.  Descargar el proyecto de Github `aito123/01_bases_acredita` del siguiente link:
+3.  Reproducir el archivo `01_bases_acredita.qmd`.
+
+# Setup
+
+```{r}
+#| label: setup
+#| message: false
+
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(tidyverse, haven, sjlabelled, labelled, rio, here, janitor, glue)
+here::i_am("01_bases_acredita.qmd")
+
+```
+
+# Importar bases de datos
+
+Se importan las ocho (8) bases de datos correspondientes a las encuestas de Acreditación Institucional aplicadas en 2022, las cuales consisten en los siguientes públicos:
+
+-   **Alumnos**
+    -   Pregrado
+
+    -   Escuela de Posgrado
+
+    -   CENTRUM
+-   **Profesores**
+    -   PUCP
+
+    -   Centrum
+-   **Egresados**
+    -   Escuela de Posgrado
+
+    -   CENTRUM
+-   **Personal Administrativo**
+    -   PUCP
+
+```{r}
+#| label: importar bases de datos
+
+#alumnos
+alum_centrum<-read_sav("data/bases_finales/10_2022. DAA - Acreditación Institucional PUCP - estudiantes posgrado CENTRUM.sav") %>% clean_names() %>% mutate(publico="Estudiantes posgrado CENTRUM")
+alum_pos<-read_sav("data/bases_finales/10_2022. DAA - Acreditación Institucional PUCP - estudiantes posgrado.sav") %>% clean_names() %>% mutate(publico="Estudiantes posgrado")
+alum_pre<-read_sav("data/bases_finales/10_2022. DAA - Acreditación Institucional PUCP - estudiantes pregrado.sav") %>% clean_names() %>% mutate(publico="Estudiantes pregrado")
+
+#egresados
+egre_pos<-read_sav("data/bases_finales/10_2022. DAA - Acreditación Institucional PUCP - egresados posgrado.sav") %>% clean_names() %>% mutate(publico="Egresados posgrado")
+egre_centrum<-read_sav("data/bases_finales/10_2022. DAA - Acreditación Institucional PUCP - egresados posgrado CENTRUM.sav") %>% clean_names() %>% mutate(publico="Egresados posgrado CENTRUM")
+
+#personal administrativo
+admin<-read_sav("data/bases_finales/10_2022. DAA - Acreditación Institucional PUCP - administrativos.sav") %>% clean_names() %>% mutate(publico="Administrativos")
+
+#docentes
+doc<-read_sav("data/bases_finales/10_2022. DAA - Acreditación Institucional PUCP - profesores.sav") %>% clean_names() %>% mutate(publico="Docentes")
+doc_centrum<-read_sav("data/bases_finales/10_2022. DAA - Acreditación Institucional PUCP - profesores CENTRUM.sav") %>% clean_names() %>% mutate(publico="Docentes CENTRUM")
+
+```
+
+# Limpieza inicial de bases de datos
+
+```{r}
+#| label: limpieza inicial bases
+
+#alumnos
+alum_pre2<-
+  alum_pre %>% 
+  mutate(
+    across(publico, ~set_label(., label="Público objetivo")),
+    across(q0031_0001, ~set_label(., label="En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indica cuál es tu nivel de satisfacción con la conexión a internet del Fondo de Conectividad PUCP:")),
+    across(q0033_0001, ~set_label(., label="En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indica cuál es tu nivel de satisfacción con los equipos informáticos de la PUCP:")),
+    across(q0035_0001, ~set_label(., label="En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indica cuál es tu nivel de satisfacción con el apoyo económico de la PUCP:")),
+  )
+
+alum_pos2<-
+  alum_pos %>% 
+  mutate(
+    across(publico, ~set_label(., label="Público objetivo")),
+    across(q0017_0001, ~set_label(., label="¿Qué tan probable es que recomiendes esta empresa a tus amigos, compañeros de trabajo o familiares?")),
+    across(q0032_0001, ~set_label(., label="En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique su nivel de satisfacción con la conexión a internet del Fondo de Conectividad PUCP:")),
+    across(q0034_0001, ~set_label(., label="En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique su nivel de satisfacción con los equipos informáticos de la PUCP:")),
+    across(q0036_0001, ~set_label(., label="En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique su nivel de satisfacción con el apoyo económico de la PUCP:")),
+  )
+
+alum_centrum2<-
+  alum_centrum %>% 
+  mutate(
+    across(publico, ~set_label(., label="Público objetivo")),
+  )
+
+#egresados
+egre_pos2<-
+  egre_pos %>% 
+  mutate(
+    across(publico, ~set_label(., label="Público objetivo")),
+    across(q0010_0001, ~set_label(., label="¿Cuál es su apreciación general del programa cursado?")),
+  )
+
+egre_centrum2<-
+  egre_centrum %>%
+  mutate(
+    across(publico, ~ set_label(., label = "Público objetivo")),
+    across(q0010_0001, ~ set_label(., label = "¿Cuál es su apreciación general del programa cursado?")),
+    )
+
+#personal administrativo
+admin2 <-
+  admin %>%
+  mutate(
+    across(publico, ~ set_label(., label = "Público objetivo")),
+    across(q0009_0001, ~ set_label(., label = "En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique cuál es su nivel de satisfacción con la conexión a internet del fondo de conectividad PUCP:")),
+    across(q0011_0001, ~ set_label(., label = "En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique cuál es su nivel de satisfacción con los equipos informáticos de la PUCP:")),
+    across(q0014_0001, ~ set_label(., label = "En una escala del 1 al 10, en el que 1 es nada estresado y 10 es muy estresado, ¿Qué tan estresado te has sentido en los últimos 3 meses?")),
+    )
+
+#docentes
+doc2<-
+  doc %>% 
+  mutate(
+    across(publico, ~ set_label(., label = "Público objetivo")),
+    across(q0011_0001, ~ set_label(., label = "En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique cuál es su nivel de satisfacción con el proceso de contratación:")),
+    across(q0013_0001, ~ set_label(., label = "En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique cuál es su nivel de satisfacción con el proceso de ingreso a la docencia:")),
+    across(q0015_0001, ~ set_label(., label = "En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique cuál es su nivel de satisfacción con el proceso de permanencia:")),
+    across(q0017_0001, ~ set_label(., label = "En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique cuál es su nivel de satisfacción con el proceso de promoción docente:")),
+    across(q0026_0001, ~ set_label(., label = "En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique su nivel de satisfacción con la conexión a internet del Fondo Conectividad PUCP:")),
+    across(q0028_0001, ~ set_label(., label = "En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique su nivel de satisfacción con los equipos informáticos de la PUCP:")),
+  )
+  
+doc_centrum2<-
+  doc_centrum %>% 
+  mutate(
+    across(publico, ~ set_label(., label = "Público objetivo")),
+    across(q0011_0001, ~ set_label(., label = "En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique su nivel de satisfacción con el proceso de ingreso a la docencia:")),
+    across(q0013_0001, ~ set_label(., label = "En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique cuál es su nivel de satisfacción con el proceso de permanencia:")),
+    across(q0015_0001, ~ set_label(., label = "En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique su nivel de satisfacción con el proceso de promoción docente:")),
+    across(q0024_0001, ~ set_label(., label = "En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique su nivel de satisfacción con la conexión a internet del Fondo Conectividad PUCP:")),
+    across(q0026_0001, ~ set_label(., label = "En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique su nivel de satisfacción con los equipos informáticos de la PUCP:")),
+  )
+
+
+
+```
+
+# Diccionario de bases de datos
+
+```{r}
+#| label: diccionarios
+#| eval: false
+
+diccionarios<-
+  bind_rows(
+    alum_pre2 %>% look_for() %>% as.data.frame() %>% mutate(actor="alumno pregrado"),
+    alum_pos2 %>% look_for() %>% as.data.frame() %>% mutate(actor="alumno posgrado"),
+    alum_centrum2 %>% look_for() %>% as.data.frame() %>% mutate(actor="alumno centrum"),
+    doc2 %>% look_for() %>% as.data.frame() %>% mutate(actor="docentes"),
+    doc_centrum2 %>% look_for() %>% as.data.frame() %>% mutate(actor="docentes centrum"),
+    egre_pos2 %>% look_for() %>% as.data.frame() %>% mutate(actor="egresados posgrado"),
+    egre_centrum2 %>% look_for() %>% as.data.frame() %>% mutate(actor="egresados centrum"),
+    admin2 %>% look_for() %>% as.data.frame() %>% mutate(actor="personal administrativo")
+  ) %>% 
+  select(-levels) %>% 
+  relocate(actor, .before = everything())
+
+diccionarios %>% 
+  mutate(across(everything(), ~as.character(.))) %>% 
+  export(here("data/bases_finales/diccionario_bases_de_datos.xlsx"),
+         asTable=TRUE,
+         overwrite=TRUE)
+```
+
+# Limpieza alumnos pregrado
+
+```{r}
+#| label: limpieza profunda alumnos pregrado1
+
+alum_pre3<-
+  alum_pre2 %>% 
+  rename_with( ~ str_replace(.x, pattern = 'q0001', replacement = 'aclaracion'), matches( '\\b(q0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0006_0002', replacement = 'act_cultural_satisf'), matches( '\\b(q0006_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0002', replacement = 'actualiza_libros_satisf'), matches( '\\b(q0018_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0002_0001', replacement = 'admision_accesible'), matches( '\\b(q0003_0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0002_0002', replacement = 'admision_util'), matches( '\\b(q0003_0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0035_0001', replacement = 'apoy_econ_satisf'), matches( '\\b(q0035_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0034', replacement = 'apoyo_econ_accede'), matches( '\\b(q0034)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0008', replacement = 'asesoria_utilizado'), matches( '\\b(q0008)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0009', replacement = 'asesorias_util'), matches( '\\b(q0009)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0014_0001', replacement = 'atencion_padmin_satisf'), matches( '\\b(q0014_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0021_0004', replacement = 'aulas_capacidad_satisf'), matches( '\\b(q0021_0004)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0021_0003', replacement = 'aulas_disponibilidad_satisf'), matches( '\\b(q0021_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0021_0002', replacement = 'aulas_equipamiento_satisf'), matches( '\\b(q0021_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0021_0001', replacement = 'aulas_mantenimiento_satisf'), matches( '\\b(q0021_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020', replacement = 'aulas_utilizado'), matches( '\\b(q0020)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0004_0001', replacement = 'becas_conoce'), matches( '\\b(q0019_0004_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0004_0003', replacement = 'becas_util'), matches( '\\b(q0019_0004_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0004_0002', replacement = 'becas_utilizado'), matches( '\\b(q0019_0004_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0025_0004', replacement = 'biblio_capacidad_satisf'), matches( '\\b(q0025_0004)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0025_0003', replacement = 'biblio_disponibilidad_satisf'), matches( '\\b(q0025_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0025_0002', replacement = 'biblio_equipamiento_satisf'), matches( '\\b(q0025_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0026_0003_0002', replacement = 'biblio_investiga_ext'), matches( '\\b(q0026_0003_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0026_0003_0001', replacement = 'biblio_investiga_pucp'), matches( '\\b(q0026_0003_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0025_0001', replacement = 'biblio_mantenimiento_satisf'), matches( '\\b(q0025_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0001', replacement = 'bibliopucp_satisf'), matches( '\\b(q0018_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0024', replacement = 'bibliotecas_utilizado'), matches( '\\b(q0024)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0015_0001', replacement = 'campus_virtual_satisf'), matches( '\\b(q0015_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'collector_id', replacement = 'collector_id'), matches( '\\b(collector_id)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'collector_nm', replacement = 'collector_nm'), matches( '\\b(collector_nm)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0004_0001', replacement = 'comunica_inst_satisf'), matches( '\\b(q0004_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0030', replacement = 'conectividad_accede'), matches( '\\b(q0030)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0031_0001', replacement = 'conectividad_satisf'), matches( '\\b(q0031_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0007', replacement = 'conoce_asesoria'), matches( '\\b(q0007)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0010', replacement = 'conoce_tutoria'), matches( '\\b(q0010)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0005', replacement = 'culturales_informado'), matches( '\\b(q0005)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0004_0001', replacement = 'cursos_accesible'), matches( '\\b(q0003_0004_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0004_0002', replacement = 'cursos_util'), matches( '\\b(q0003_0004_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'custom_1', replacement = 'custom_1'), matches( '\\b(custom_1)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'date_created', replacement = 'date_created'), matches( '\\b(date_created)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'date_modified', replacement = 'date_modified'), matches( '\\b(date_modified)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0001_0001', replacement = 'deporte_conoce'), matches( '\\b(q0019_0001_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0001_0003', replacement = 'deporte_util'), matches( '\\b(q0019_0001_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0001_0002', replacement = 'deporte_utilizado'), matches( '\\b(q0019_0001_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0029_0002', replacement = 'diversidad_intercambio_satisf'), matches( '\\b(q0029_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'email_address', replacement = 'email_address'), matches( '\\b(email_address)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0006_0001', replacement = 'empleabilidad_conoce'), matches( '\\b(q0019_0006_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0006_0003', replacement = 'empleabilidad_util'), matches( '\\b(q0019_0006_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0006_0002', replacement = 'empleabilidad_utilizado'), matches( '\\b(q0019_0006_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0033_0001', replacement = 'equipamiento_satisf'), matches( '\\b(q0033_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0032', replacement = 'equipoinf_accede'), matches( '\\b(q0032)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0029_0004', replacement = 'fac_eco_internacional_satisf'), matches( '\\b(q0029_0004)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'first_name', replacement = 'first_name'), matches( '\\b(first_name)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0001', replacement = 'gestion_padmin_satisf'), matches( '\\b(q0013_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0006_0001', replacement = 'grado_accesible'), matches( '\\b(q0003_0006_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0006_0002', replacement = 'grado_util'), matches( '\\b(q0003_0006_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0036', replacement = 'id'), matches( '\\b(q0036)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0028_0002', replacement = 'incluyo_investiga'), matches( '\\b(q0028_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0028_0001', replacement = 'incluyo_rsu'), matches( '\\b(q0028_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0006_0001', replacement = 'info_cultural_satisf'), matches( '\\b(q0006_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0029_0005', replacement = 'internacional_satisf'), matches( '\\b(q0029_0005)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'ip_address', replacement = 'ip_address'), matches( '\\b(ip_address)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0022', replacement = 'lab_utilizado'), matches( '\\b(q0022)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0023_0004', replacement = 'labvirtual_capacidad_satisf'), matches( '\\b(q0023_0004)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0023_0003', replacement = 'labvirtual_disponibilidad_satisf'), matches( '\\b(q0023_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0023_0002', replacement = 'labvirtual_equipamiento_satisf'), matches( '\\b(q0023_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0023_0001', replacement = 'labvirtual_mantenimiento_satisf'), matches( '\\b(q0023_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0017_0001', replacement = 'labvirtual_satisf'), matches( '\\b(q0017_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016', replacement = 'labvirtual_utilizado'), matches( '\\b(q0016)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'last_name', replacement = 'last_name'), matches( '\\b(last_name)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0002_0001', replacement = 'mision_univ'), matches( '\\b(q0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0005_0001', replacement = 'normas_accesible'), matches( '\\b(q0003_0005_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0005_0002', replacement = 'normas_util'), matches( '\\b(q0003_0005_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0029_0001', replacement = 'num_intercambios'), matches( '\\b(q0029_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0001_0001', replacement = 'objetivos_accesible'), matches( '\\b(q0003_0001_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0001_0002', replacement = 'objetivos_util'), matches( '\\b(q0003_0001_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0015_0002', replacement = 'paideia_satisf'), matches( '\\b(q0015_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0003_0001', replacement = 'perfil_accesible'), matches( '\\b(q0003_0003_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0003_0002', replacement = 'perfil_util'), matches( '\\b(q0003_0003_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0027', replacement = 'princ_eticos_conoce'), matches( '\\b(q0027)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0026_0001_0002', replacement = 'prof_investiga_ext'), matches( '\\b(q0026_0001_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0026_0001_0001', replacement = 'prof_investiga_pucp'), matches( '\\b(q0026_0001_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0026_0002_0002', replacement = 'promo_eventos_ext'), matches( '\\b(q0026_0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0026_0002_0001', replacement = 'promo_eventos_pucp'), matches( '\\b(q0026_0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0003_0001', replacement = 'psico_conoce'), matches( '\\b(q0019_0003_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0003_0003', replacement = 'psico_util'), matches( '\\b(q0019_0003_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0003_0002', replacement = 'psico_utilizado'), matches( '\\b(q0019_0003_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'publico', replacement = 'publico'), matches( '\\b(publico)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0007_0001', replacement = 'reclamos_accesible'), matches( '\\b(q0003_0007_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0007_0002', replacement = 'reclamos_util'), matches( '\\b(q0003_0007_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0029_0003', replacement = 'req_acad_internacional_satisf'), matches( '\\b(q0029_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'respondent_id', replacement = 'respondent_id'), matches( '\\b(respondent_id)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0002_0001', replacement = 'salud_conoce'), matches( '\\b(q0019_0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0002_0003', replacement = 'salud_util'), matches( '\\b(q0019_0002_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0002_0002', replacement = 'salud_utilizado'), matches( '\\b(q0019_0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0003', replacement = 'servicios_prest_satisf'), matches( '\\b(q0018_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0005_0001', replacement = 'socio_econ_conoce'), matches( '\\b(q0019_0005_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0005_0003', replacement = 'socio_econ_util'), matches( '\\b(q0019_0005_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0005_0002', replacement = 'socio_econ_utilizado'), matches( '\\b(q0019_0005_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0011', replacement = 'tutoria_participa'), matches( '\\b(q0011)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0012', replacement = 'tutoria_util'), matches( '\\b(q0012)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0002_0003', replacement = 'valores_univ'), matches( '\\b(q0002_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0002_0002', replacement = 'vision_univ'), matches( '\\b(q0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0015_0003', replacement = 'zoom_satisf'), matches( '\\b(q0015_0003)\\b')) %>% 
+  mutate(
+ across(aclaracion, ~set_label(., label = 'Hecha esta aclaración, ¿desea continuar con la encuesta?')), 
+ across(act_cultural_satisf, ~set_label(., label = 'La variedad de actividades culturales que promueve la PUCP')), 
+ across(actualiza_libros_satisf, ~set_label(., label = 'La actualización de los recursos (bases de datos, e-books, revistas electrónicas, libros y revistas impresas, guías temáticas, repositorios, etc.) con información vigente para mi especialidad')), 
+ across(admision_accesible, ~set_label(., label = '...los requisitos de admisión… - ¿Es accesible?')), 
+ across(admision_util, ~set_label(., label = '...los requisitos de admisión… - ¿Es útil?')), 
+ across(apoy_econ_satisf, ~set_label(., label = 'En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique su nivel de satisfacción con el apoyo económico de la PUCP:')), 
+ across(apoyo_econ_accede, ~set_label(., label = '¿Accedió al apoyo económico de la PUCP?')), 
+ across(asesoria_utilizado, ~set_label(., label = '¿Alguna vez ha utilizado los servicios de asesoría académica de la facultad, especialidad o programa en el que actualmente estudia?')), 
+ across(asesorias_util, ~set_label(., label = '¿Las asesorías académicas han sido útiles?')), 
+ across(atencion_padmin_satisf, ~set_label(., label = 'La atención que brinda el personal administrativo PUCP (durante los trámites administrativos y académicos)')), 
+ across(aulas_capacidad_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la capacidad de las aulas PUCP')), 
+ across(aulas_disponibilidad_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la disponibilidad de las aulas PUCP')), 
+ across(aulas_equipamiento_satisf, ~set_label(., label = 'Nivel de satisfacción respecto al equipamiento de las aulas PUCP')), 
+ across(aulas_mantenimiento_satisf, ~set_label(., label = 'Nivel de satisfacción respecto al mantenimiento de las aulas PUCP')), 
+ across(aulas_utilizado, ~set_label(., label = 'Sobre las aulas de la PUCP, ¿Ha utilizado las aulas de la PUCP?')), 
+ across(becas_conoce, ~set_label(., label = 'Becas - ¿Lo conoce?')), 
+ across(becas_util, ~set_label(., label = 'Becas - ¿Le fue útil?')), 
+ across(becas_utilizado, ~set_label(., label = 'Becas - ¿Lo ha utilizado?')), 
+ across(biblio_capacidad_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la capacidad de las Bibliotecas PUCP')), 
+ across(biblio_disponibilidad_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la disponibilidad de las Bibliotecas PUCP')), 
+ across(biblio_equipamiento_satisf, ~set_label(., label = 'Nivel de satisfacción respecto al equipamiento de las Bibliotecas PUCP')), 
+ across(biblio_investiga_ext, ~set_label(., label = '¿Las bibliotecas y/o centros de información brindan acceso a investigaciones actualizadas (recientes)…(no incluir tesis de estudiantes pregrado y posgrado)… - ...producidas por investigadores externos?')), 
+ across(biblio_investiga_pucp, ~set_label(., label = '¿Las bibliotecas y/o centros de información brindan acceso a investigaciones actualizadas (recientes)…(no incluir tesis de estudiantes pregrado y posgrado)… - ...producidas por investigadores de la PUCP?')), 
+ across(biblio_mantenimiento_satisf, ~set_label(., label = 'Nivel de satisfacción respecto al mantenimiento de las Bibliotecas PUCP')), 
+ across(bibliopucp_satisf, ~set_label(., label = 'El acceso a los recursos (catálogo en línea, bases de datos, e-books, revistas electrónicas, libros y revistas impresas, guías temáticas, repositorios, tutoriales, podcast, etc.) de las bibliotecas PUCP')), 
+ across(bibliotecas_utilizado, ~set_label(., label = 'Sobre las bibliotecas y/o centros de información y referencia, ¿Ha utilizado las bibliotecas y/o centros de información y referencia de la universidad?')), 
+ across(campus_virtual_satisf, ~set_label(., label = 'Nivel de satisfacción respecto al campus virtual')), 
+ across(collector_id, ~set_label(., label = 'collector_id')), 
+ across(collector_nm, ~set_label(., label = 'CollectorNm')), 
+ across(comunica_inst_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la comunicación institucional PUCP')), 
+ across(conectividad_accede, ~set_label(., label = 'Sobre los recursos de apoyo a la formación brindados por la PUCP durante la pandemia:¿Accedió a conexión a internet del Fondo de Conectividad PUCP?')), 
+ across(conectividad_satisf, ~set_label(., label = 'En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique cuál es su nivel de satisfacción con la conexión a internet del fondo de conectividad PUCP:')), 
+ across(conoce_asesoria, ~set_label(., label = '¿Conoces si la facultad, especialidad o el programa en el que actualmente estudia brinda asesoría académica a los estudiantes que la requieran?')), 
+ across(conoce_tutoria, ~set_label(., label = '¿Conoce si la facultad, especialidad o el programa en el que actualmente estudia ofrece el servicio de tutoría a los estudiantes?')), 
+ across(culturales_informado, ~set_label(., label = 'Sobre las actividades culturales:¿Ha sido informado por la PUCP sobre las actividades culturales (cine, teatro, exposiciones artísticas, presentaciones musicales, etc.) que se ofrecen al público general?')), 
+ across(cursos_accesible, ~set_label(., label = '...los planes de estudios y cursos… - ¿Es accesible?')), 
+ across(cursos_util, ~set_label(., label = '...los planes de estudios y cursos… - ¿Es útil?')), 
+ across(custom_1, ~set_label(., label = 'custom_1')), 
+ across(date_created, ~set_label(., label = 'date_created')), 
+ across(date_modified, ~set_label(., label = 'date_modified')), 
+ across(deporte_conoce, ~set_label(., label = 'Servicio de actividad física y deportes - ¿Lo conoce?')), 
+ across(deporte_util, ~set_label(., label = 'Servicio de actividad física y deporte - ¿Le fue útil?')), 
+ across(deporte_utilizado, ~set_label(., label = 'Servicio de actividad física y deportes - ¿Lo ha utilizado?')), 
+ across(diversidad_intercambio_satisf, ~set_label(., label = 'La diversidad de programas de intercambio que se ofrecen')), 
+ across(email_address, ~set_label(., label = 'email_address')), 
+ across(empleabilidad_conoce, ~set_label(., label = 'Empleabilidad - ¿Lo conoce?')), 
+ across(empleabilidad_util, ~set_label(., label = 'Empleabilidad - ¿Le fue útil?')), 
+ across(empleabilidad_utilizado, ~set_label(., label = 'Empleabilidad - ¿Lo ha utilizado?')), 
+ across(equipamiento_satisf, ~set_label(., label = 'En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique cuál es su nivel de satisfacción con los equipos informáticos de la PUCP:')), 
+ across(equipoinf_accede, ~set_label(., label = '¿Accedió a equipos informáticos de la PUCP?')), 
+ across(fac_eco_internacional_satisf, ~set_label(., label = 'Las facilidades económicas para acceder a los programas de intercambio o a las oportunidades de internacionalización')), 
+ across(first_name, ~set_label(., label = 'first_name')), 
+ across(gestion_padmin_satisf, ~set_label(., label = 'La gestión de los procesos académico-administrativos (matrícula, registro de notas, emisión de constancias y diplomas, información personal, entre otros)')), 
+ across(grado_accesible, ~set_label(., label = '...la obtención del grado y/o título profesional… - ¿Es accesible?')), 
+ across(grado_util, ~set_label(., label = '...la obtención del grado y/o título profesional… - ¿Es útil?')), 
+ across(id, ~set_label(., label = 'id')), 
+ across(incluyo_investiga, ~set_label(., label = '¿Considera que el plan de estudios incluyó actividades orientadas a la investigación?')), 
+ across(incluyo_rsu, ~set_label(., label = '¿Considera que el plan de estudios incluyó actividades orientadas a la responsabilidad social universitaria?')), 
+ across(info_cultural_satisf, ~set_label(., label = 'La información que ofrece la PUCP sobre las actividades culturales que promueve')), 
+ across(internacional_satisf, ~set_label(., label = 'En general, ¿qué tan satisfecho te encuentras con la oferta de programas de intercambio o con las oportunidades de internacionalización ofrecidas?')), 
+ across(ip_address, ~set_label(., label = 'ip_address')), 
+ across(lab_utilizado, ~set_label(., label = 'Sobre los espacios para laboratorios o talleres de la PUCP (ambientes donde se desarrolla o pone en práctica lo aprendido en la teoría), ¿Ha utilizado los laboratorios o talleres de la PUCP?')), 
+ across(labvirtual_capacidad_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la capacidad de los laboratorios virtuales PUCP')), 
+ across(labvirtual_disponibilidad_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la disponibilidad de los laboratorios virtuales PUCP')), 
+ across(labvirtual_equipamiento_satisf, ~set_label(., label = 'Nivel de satisfacción respecto al equipamiento de los laboratorios virtuales PUCP')), 
+ across(labvirtual_mantenimiento_satisf, ~set_label(., label = 'Nivel de satisfacción respecto al mantenimiento de los laboratorios virtuales PUCP')), 
+ across(labvirtual_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a laboratorios virtuales PUCP')), 
+ across(labvirtual_utilizado, ~set_label(., label = 'Sobre los laboratorios virtuales en la PUCP, ¿Ha utilizado los laboratorios virtuales de la PUCP?')), 
+ across(last_name, ~set_label(., label = 'last_name')), 
+ across(mision_univ, ~set_label(., label = '...la misión de la universidad?')), 
+ across(normas_accesible, ~set_label(., label = '¿Consideras que la información que brinda la universidad sobre las normas y los reglamentos institucionales es… - … accesible?')), 
+ across(normas_util, ~set_label(., label = '¿Consideras que la información que brinda la universidad sobre las normas y los reglamentos institucionales es… - … útil?')), 
+ across(num_intercambios, ~set_label(., label = 'El número de programas de intercambio que se ofrecen')), 
+ across(objetivos_accesible, ~set_label(., label = '¿Consideras que la información que brinda la universidad sobre los objetivos es… - … accesible?')), 
+ across(objetivos_util, ~set_label(., label = '¿Consideras que la información que brinda la universidad sobre los objetivos es… - … útil?')), 
+ across(paideia_satisf, ~set_label(., label = 'Plataforma de enseñanza-aprendizaje PAIDEIA')), 
+ across(perfil_accesible, ~set_label(., label = '...las especialidades o programas que ofrece y los perfiles de egreso… - ¿Es accesible?')), 
+ across(perfil_util, ~set_label(., label = '...las especialidades o programas que ofrece y los perfiles de egreso… - ¿Es útil?')), 
+ across(princ_eticos_conoce, ~set_label(., label = 'Sobre los principios éticos en la investigación, ¿Conoce los principios éticos que guían la investigación en la PUCP?')), 
+ across(prof_investiga_ext, ~set_label(., label = '¿Los profesores, en mis cursos, promueven que consulte investigaciones recientes… - ...producidas por investigadores externos?')), 
+ across(prof_investiga_pucp, ~set_label(., label = '¿Los profesores, en mis cursos, promueven que consulte investigaciones recientes… - ...producidas por investigadores de la PUCP?')), 
+ across(promo_eventos_ext, ~set_label(., label = '¿La PUCP promueve eventos académicos (conversatorios, seminarios, coloquios, talleres, etc.) donde se presentan investigaciones recientes o de mi especialidad… - ...producidas por investigadores externos?')), 
+ across(promo_eventos_pucp, ~set_label(., label = '¿La universidad promueve eventos académicos (conversatorios, seminarios, coloquios, talleres, etc.) donde se presentan investigaciones recientes o de mi especialidad… - ...producidas por investigadores de la universidad?')), 
+ across(psico_conoce, ~set_label(., label = 'Bienestar Psicológico - ¿Lo conoce?')), 
+ across(psico_util, ~set_label(., label = 'Bienestar Psicológico - ¿Le fue útil?')), 
+ across(psico_utilizado, ~set_label(., label = 'Bienestar Psicológico - ¿Lo ha utilizado?')), 
+ across(publico, ~set_label(., label = 'Público objetivo')), 
+ across(reclamos_accesible, ~set_label(., label = '...los procedimientos para reclamos (con relación a los trámites académicos, administrativos y a los servicios que ofrece en general)… - ¿Es accesible?')), 
+ across(reclamos_util, ~set_label(., label = '...los procedimientos para reclamos (con relación a los trámites académicos, administrativos y a los servicios que ofrece en general)… - ¿Es útil?')), 
+ across(req_acad_internacional_satisf, ~set_label(., label = 'Los requisitos académicos para acceder a los programas de intercambio o  a las oportunidades de intternacionalización')), 
+ across(respondent_id, ~set_label(., label = 'respondent_id')), 
+ across(salud_conoce, ~set_label(., label = 'Servicio de Salud - ¿Lo conoce?')), 
+ across(salud_util, ~set_label(., label = 'Servicio de Salud - ¿Le fue útil?')), 
+ across(salud_utilizado, ~set_label(., label = 'Servicio de Salud - ¿Lo ha utilizado?')), 
+ across(servicios_prest_satisf, ~set_label(., label = 'Los servicios prestados por las bibliotecas o centros de información(asesorías, atención a personas con discapacidad visual, digitalización, préstamo a pedido, provisión de documentos, publicaciones para la docencia)')), 
+ across(socio_econ_conoce, ~set_label(., label = 'Atención socio- económica - ¿Lo conoce?')), 
+ across(socio_econ_util, ~set_label(., label = 'Atención socio- económica - ¿Le fue útil?')), 
+ across(socio_econ_utilizado, ~set_label(., label = 'Atención socio- económica - ¿Lo ha utilizado?')), 
+ across(tutoria_participa, ~set_label(., label = '¿Alguna vez ha participado en el servicio de tutoría de la facultad, especialidad, o del programa en el que actualmente estudia?')), 
+ across(tutoria_util, ~set_label(., label = '¿El servicio de tutoría brindado ha sido útil?')), 
+ across(valores_univ, ~set_label(., label = '...los valores institucionales de la universidad?')), 
+ across(vision_univ, ~set_label(., label = '...la visión  de la universidad?')), 
+ across(zoom_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la Plataforma de videoconferencias ZOOM')), 
+  )
+  
+```
+
+# Limpieza alumnos posgrado
+
+```{r}
+#| label: limpieza profunda alumnos posgrado1
+
+alum_pos3<-
+  alum_pos2 %>% 
+  rename_with( ~ str_replace(.x, pattern = 'q0001', replacement = 'aclaracion'), matches( '\\b(q0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0005_0002', replacement = 'act_cultural_satisf'), matches( '\\b(q0005_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0002', replacement = 'actualiza_libros_satisf'), matches( '\\b(q0019_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0006_0002_0001', replacement = 'admision_accesible'), matches( '\\b(q0006_0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0006_0002_0002', replacement = 'admision_util'), matches( '\\b(q0006_0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0036_0001', replacement = 'apoy_econ_satisf'), matches( '\\b(q0036_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0035', replacement = 'apoyo_econ_accede'), matches( '\\b(q0035)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0008', replacement = 'asesoria_utilizado'), matches( '\\b(q0008)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0009', replacement = 'asesorias_util'), matches( '\\b(q0009)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0014_0001', replacement = 'atencion_padmin_satisf'), matches( '\\b(q0014_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0022_0004', replacement = 'aulas_capacidad_satisf'), matches( '\\b(q0022_0004)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0022_0003', replacement = 'aulas_disponibilidad_satisf'), matches( '\\b(q0022_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0022_0002', replacement = 'aulas_equipamiento_satisf'), matches( '\\b(q0022_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0022_0001', replacement = 'aulas_mantenimiento_satisf'), matches( '\\b(q0022_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0021', replacement = 'aulas_utilizado'), matches( '\\b(q0021)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0004_0001', replacement = 'becas_conoce'), matches( '\\b(q0020_0004_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0004_0003', replacement = 'becas_util'), matches( '\\b(q0020_0004_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0004_0002', replacement = 'becas_utilizado'), matches( '\\b(q0020_0004_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0026_0004', replacement = 'biblio_capacidad_satisf'), matches( '\\b(q0026_0004)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0026_0003', replacement = 'biblio_disponibilidad_satisf'), matches( '\\b(q0026_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0026_0002', replacement = 'biblio_equipamiento_satisf'), matches( '\\b(q0026_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0027_0003_0002', replacement = 'biblio_investiga_ext'), matches( '\\b(q0027_0003_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0027_0003_0001', replacement = 'biblio_investiga_pucp'), matches( '\\b(q0027_0003_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0026_0001', replacement = 'biblio_mantenimiento_satisf'), matches( '\\b(q0026_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0001', replacement = 'bibliopucp_satisf'), matches( '\\b(q0019_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0025', replacement = 'bibliotecas_utilizado'), matches( '\\b(q0025)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0015_0001', replacement = 'campus_virtual_satisf'), matches( '\\b(q0015_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'collector_id', replacement = 'collector_id'), matches( '\\b(collector_id)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'collector_nm', replacement = 'collector_nm'), matches( '\\b(collector_nm)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0001', replacement = 'comunica_inst_satisf'), matches( '\\b(q0003_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0031', replacement = 'conectividad_accede'), matches( '\\b(q0031)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0032_0001', replacement = 'conectividad_satisf'), matches( '\\b(q0032_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0007', replacement = 'conoce_asesoria'), matches( '\\b(q0007)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0010', replacement = 'conoce_tutoria'), matches( '\\b(q0010)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0004', replacement = 'culturales_informado'), matches( '\\b(q0004)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0006_0004_0001', replacement = 'cursos_accesible'), matches( '\\b(q0006_0004_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0006_0004_0002', replacement = 'cursos_util'), matches( '\\b(q0006_0004_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'custom_1', replacement = 'custom_1'), matches( '\\b(custom_1)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'date_created', replacement = 'date_created'), matches( '\\b(date_created)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'date_modified', replacement = 'date_modified'), matches( '\\b(date_modified)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0001_0001', replacement = 'deporte_conoce'), matches( '\\b(q0020_0001_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0001_0003', replacement = 'deporte_util'), matches( '\\b(q0020_0001_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0001_0002', replacement = 'deporte_utilizado'), matches( '\\b(q0020_0001_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'email_address', replacement = 'email_address'), matches( '\\b(email_address)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0006_0001', replacement = 'empleabilidad_conoce'), matches( '\\b(q0020_0006_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0006_0003', replacement = 'empleabilidad_util'), matches( '\\b(q0020_0006_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0006_0002', replacement = 'empleabilidad_utilizado'), matches( '\\b(q0020_0006_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0034_0001', replacement = 'equipamiento_satisf'), matches( '\\b(q0034_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0033', replacement = 'equipoinf_accede'), matches( '\\b(q0033)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0030_0003', replacement = 'fac_eco_internacional_satisf'), matches( '\\b(q0030_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'first_name', replacement = 'first_name'), matches( '\\b(first_name)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0001', replacement = 'gestion_padmin_satisf'), matches( '\\b(q0013_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0006_0006_0001', replacement = 'grado_accesible'), matches( '\\b(q0006_0006_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0006_0006_0002', replacement = 'grado_util'), matches( '\\b(q0006_0006_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0037', replacement = 'id'), matches( '\\b(q0037)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0029_0002', replacement = 'incluyo_investiga'), matches( '\\b(q0029_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0029_0001', replacement = 'incluyo_rsu'), matches( '\\b(q0029_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0005_0001', replacement = 'info_cultural_satisf'), matches( '\\b(q0005_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0030_0004', replacement = 'internacional_satisf'), matches( '\\b(q0030_0004)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'ip_address', replacement = 'ip_address'), matches( '\\b(ip_address)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0023', replacement = 'lab_utilizado'), matches( '\\b(q0023)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0024_0004', replacement = 'labvirtual_capacidad_satisf'), matches( '\\b(q0024_0004)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0024_0003', replacement = 'labvirtual_disponibilidad_satisf'), matches( '\\b(q0024_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0024_0002', replacement = 'labvirtual_equipamiento_satisf'), matches( '\\b(q0024_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0024_0001', replacement = 'labvirtual_mantenimiento_satisf'), matches( '\\b(q0024_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0001', replacement = 'labvirtual_satisf'), matches( '\\b(q0018_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016', replacement = 'labvirtual_utilizado'), matches( '\\b(q0016)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'last_name', replacement = 'last_name'), matches( '\\b(last_name)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0002_0001', replacement = 'mision_univ'), matches( '\\b(q0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0006_0005_0001', replacement = 'normas_accesible'), matches( '\\b(q0006_0005_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0006_0005_0002', replacement = 'normas_util'), matches( '\\b(q0006_0005_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0006_0001_0001', replacement = 'objetivos_accesible'), matches( '\\b(q0006_0001_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0006_0001_0002', replacement = 'objetivos_util'), matches( '\\b(q0006_0001_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0030_0001', replacement = 'oport_internacional_satisf'), matches( '\\b(q0030_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0015_0002', replacement = 'paideia_satisf'), matches( '\\b(q0015_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0006_0003_0001', replacement = 'perfil_accesible'), matches( '\\b(q0006_0003_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0006_0003_0002', replacement = 'perfil_util'), matches( '\\b(q0006_0003_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0028', replacement = 'princ_eticos_conoce'), matches( '\\b(q0028)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0027_0001_0002', replacement = 'prof_investiga_ext'), matches( '\\b(q0027_0001_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0027_0001_0001', replacement = 'prof_investiga_pucp'), matches( '\\b(q0027_0001_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0027_0002_0002', replacement = 'promo_eventos_ext'), matches( '\\b(q0027_0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0027_0002_0001', replacement = 'promo_eventos_pucp'), matches( '\\b(q0027_0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0003_0001', replacement = 'psico_conoce'), matches( '\\b(q0020_0003_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0003_0003', replacement = 'psico_util'), matches( '\\b(q0020_0003_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0003_0002', replacement = 'psico_utilizado'), matches( '\\b(q0020_0003_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'publico', replacement = 'publico'), matches( '\\b(publico)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0006_0007_0001', replacement = 'reclamos_accesible'), matches( '\\b(q0006_0007_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0006_0007_0002', replacement = 'reclamos_util'), matches( '\\b(q0006_0007_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0017_0001', replacement = 'recomienda_empresa'), matches( '\\b(q0017_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0030_0002', replacement = 'req_acad_internacional_satisf'), matches( '\\b(q0030_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'respondent_id', replacement = 'respondent_id'), matches( '\\b(respondent_id)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0002_0001', replacement = 'salud_conoce'), matches( '\\b(q0020_0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0002_0003', replacement = 'salud_util'), matches( '\\b(q0020_0002_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0002_0002', replacement = 'salud_utilizado'), matches( '\\b(q0020_0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0003', replacement = 'servicios_prest_satisf'), matches( '\\b(q0019_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0005_0001', replacement = 'socio_econ_conoce'), matches( '\\b(q0020_0005_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0005_0003', replacement = 'socio_econ_util'), matches( '\\b(q0020_0005_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0005_0002', replacement = 'socio_econ_utilizado'), matches( '\\b(q0020_0005_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0011', replacement = 'tutoria_participa'), matches( '\\b(q0011)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0012', replacement = 'tutoria_util'), matches( '\\b(q0012)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0002_0003', replacement = 'valores_univ'), matches( '\\b(q0002_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0002_0002', replacement = 'vision_univ'), matches( '\\b(q0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0015_0003', replacement = 'zoom_satisf'), matches( '\\b(q0015_0003)\\b')) %>% 
+  mutate(
+ across(aclaracion, ~set_label(., label = 'Hecha esta aclaración, ¿desea continuar con la encuesta?')), 
+ across(act_cultural_satisf, ~set_label(., label = 'La variedad de actividades culturales que promueve la PUCP')), 
+ across(actualiza_libros_satisf, ~set_label(., label = 'La actualización de los recursos (bases de datos, e-books, revistas electrónicas, libros y revistas impresas, guías temáticas, repositorios, etc.) con información vigente para mi especialidad')), 
+ across(admision_accesible, ~set_label(., label = '...los requisitos de admisión… - ¿Es accesible?')), 
+ across(admision_util, ~set_label(., label = '...los requisitos de admisión… - ¿Es útil?')), 
+ across(apoy_econ_satisf, ~set_label(., label = 'En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique su nivel de satisfacción con el apoyo económico de la PUCP:')), 
+ across(apoyo_econ_accede, ~set_label(., label = '¿Accedió al apoyo económico de la PUCP?')), 
+ across(asesoria_utilizado, ~set_label(., label = '¿Alguna vez ha utilizado los servicios de asesoría académica de la facultad, especialidad o programa en el que actualmente estudia?')), 
+ across(asesorias_util, ~set_label(., label = '¿Las asesorías académicas han sido útiles?')), 
+ across(atencion_padmin_satisf, ~set_label(., label = 'La atención que brinda el personal administrativo PUCP (durante los trámites administrativos y académicos)')), 
+ across(aulas_capacidad_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la capacidad de las aulas PUCP')), 
+ across(aulas_disponibilidad_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la disponibilidad de las aulas PUCP')), 
+ across(aulas_equipamiento_satisf, ~set_label(., label = 'Nivel de satisfacción respecto al equipamiento de las aulas PUCP')), 
+ across(aulas_mantenimiento_satisf, ~set_label(., label = 'Nivel de satisfacción respecto al mantenimiento de las aulas PUCP')), 
+ across(aulas_utilizado, ~set_label(., label = 'Sobre las aulas de la PUCP, ¿Ha utilizado las aulas de la PUCP?')), 
+ across(becas_conoce, ~set_label(., label = 'Becas - ¿Lo conoce?')), 
+ across(becas_util, ~set_label(., label = 'Becas - ¿Le fue útil?')), 
+ across(becas_utilizado, ~set_label(., label = 'Becas - ¿Lo ha utilizado?')), 
+ across(biblio_capacidad_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la capacidad de las Bibliotecas PUCP')), 
+ across(biblio_disponibilidad_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la disponibilidad de las Bibliotecas PUCP')), 
+ across(biblio_equipamiento_satisf, ~set_label(., label = 'Nivel de satisfacción respecto al equipamiento de las Bibliotecas PUCP')), 
+ across(biblio_investiga_ext, ~set_label(., label = '¿Las bibliotecas y/o centros de información brindan acceso a investigaciones actualizadas (recientes)…(no incluir tesis de estudiantes pregrado y posgrado)… - ...producidas por investigadores externos?')), 
+ across(biblio_investiga_pucp, ~set_label(., label = '¿Las bibliotecas y/o centros de información brindan acceso a investigaciones actualizadas (recientes)…(no incluir tesis de estudiantes pregrado y posgrado)… - ...producidas por investigadores de la PUCP?')), 
+ across(biblio_mantenimiento_satisf, ~set_label(., label = 'Nivel de satisfacción respecto al mantenimiento de las Bibliotecas PUCP')), 
+ across(bibliopucp_satisf, ~set_label(., label = 'El acceso a los recursos (catálogo en línea, bases de datos, e-books, revistas electrónicas, libros y revistas impresas, guías temáticas, repositorios, tutoriales, podcast, etc.) de las bibliotecas PUCP')), 
+ across(bibliotecas_utilizado, ~set_label(., label = 'Sobre las bibliotecas y/o centros de información y referencia, ¿Ha utilizado las bibliotecas y/o centros de información y referencia de la universidad?')), 
+ across(campus_virtual_satisf, ~set_label(., label = 'Nivel de satisfacción respecto al campus virtual')), 
+ across(collector_id, ~set_label(., label = 'collector_id')), 
+ across(collector_nm, ~set_label(., label = 'CollectorNm')), 
+ across(comunica_inst_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la comunicación institucional PUCP')), 
+ across(conectividad_accede, ~set_label(., label = 'Sobre los recursos de apoyo a la formación brindados por la PUCP durante la pandemia:¿Accedió a conexión a internet del Fondo de Conectividad PUCP?')), 
+ across(conectividad_satisf, ~set_label(., label = 'En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique cuál es su nivel de satisfacción con la conexión a internet del fondo de conectividad PUCP:')), 
+ across(conoce_asesoria, ~set_label(., label = '¿Conoces si la facultad, especialidad o el programa en el que actualmente estudia brinda asesoría académica a los estudiantes que la requieran?')), 
+ across(conoce_tutoria, ~set_label(., label = '¿Conoce si la facultad, especialidad o el programa en el que actualmente estudia ofrece el servicio de tutoría a los estudiantes?')), 
+ across(culturales_informado, ~set_label(., label = 'Sobre las actividades culturales:¿Ha sido informado por la PUCP sobre las actividades culturales (cine, teatro, exposiciones artísticas, presentaciones musicales, etc.) que se ofrecen al público general?')), 
+ across(cursos_accesible, ~set_label(., label = '...los planes de estudios y cursos… - ¿Es accesible?')), 
+ across(cursos_util, ~set_label(., label = '...los planes de estudios y cursos… - ¿Es útil?')), 
+ across(custom_1, ~set_label(., label = 'custom_1')), 
+ across(date_created, ~set_label(., label = 'date_created')), 
+ across(date_modified, ~set_label(., label = 'date_modified')), 
+ across(deporte_conoce, ~set_label(., label = 'Servicio de actividad física y deportes - ¿Lo conoce?')), 
+ across(deporte_util, ~set_label(., label = 'Servicio de actividad física y deporte - ¿Le fue útil?')), 
+ across(deporte_utilizado, ~set_label(., label = 'Servicio de actividad física y deportes - ¿Lo ha utilizado?')), 
+ across(email_address, ~set_label(., label = 'email_address')), 
+ across(empleabilidad_conoce, ~set_label(., label = 'Empleabilidad - ¿Lo conoce?')), 
+ across(empleabilidad_util, ~set_label(., label = 'Empleabilidad - ¿Le fue útil?')), 
+ across(empleabilidad_utilizado, ~set_label(., label = 'Empleabilidad - ¿Lo ha utilizado?')), 
+ across(equipamiento_satisf, ~set_label(., label = 'En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique cuál es su nivel de satisfacción con los equipos informáticos de la PUCP:')), 
+ across(equipoinf_accede, ~set_label(., label = '¿Accedió a equipos informáticos de la PUCP?')), 
+ across(fac_eco_internacional_satisf, ~set_label(., label = 'Las facilidades económicas para acceder a los programas de intercambio o a las oportunidades de internacionalización')), 
+ across(first_name, ~set_label(., label = 'first_name')), 
+ across(gestion_padmin_satisf, ~set_label(., label = 'La gestión de los procesos académico-administrativos (matrícula, registro de notas, emisión de constancias y diplomas, información personal, entre otros)')), 
+ across(grado_accesible, ~set_label(., label = '...la obtención del grado y/o título profesional… - ¿Es accesible?')), 
+ across(grado_util, ~set_label(., label = '...la obtención del grado y/o título profesional… - ¿Es útil?')), 
+ across(id, ~set_label(., label = 'id')), 
+ across(incluyo_investiga, ~set_label(., label = '¿Considera que el plan de estudios incluyó actividades orientadas a la investigación?')), 
+ across(incluyo_rsu, ~set_label(., label = '¿Considera que el plan de estudios incluyó actividades orientadas a la responsabilidad social universitaria?')), 
+ across(info_cultural_satisf, ~set_label(., label = 'La información que ofrece la PUCP sobre las actividades culturales que promueve')), 
+ across(internacional_satisf, ~set_label(., label = 'En general, ¿qué tan satisfecho te encuentras con la oferta de programas de intercambio o con las oportunidades de internacionalización ofrecidas?')), 
+ across(ip_address, ~set_label(., label = 'ip_address')), 
+ across(lab_utilizado, ~set_label(., label = 'Sobre los espacios para laboratorios o talleres de la PUCP (ambientes donde se desarrolla o pone en práctica lo aprendido en la teoría), ¿Ha utilizado los laboratorios o talleres de la PUCP?')), 
+ across(labvirtual_capacidad_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la capacidad de los laboratorios virtuales PUCP')), 
+ across(labvirtual_disponibilidad_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la disponibilidad de los laboratorios virtuales PUCP')), 
+ across(labvirtual_equipamiento_satisf, ~set_label(., label = 'Nivel de satisfacción respecto al equipamiento de los laboratorios virtuales PUCP')), 
+ across(labvirtual_mantenimiento_satisf, ~set_label(., label = 'Nivel de satisfacción respecto al mantenimiento de los laboratorios virtuales PUCP')), 
+ across(labvirtual_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a laboratorios virtuales PUCP')), 
+ across(labvirtual_utilizado, ~set_label(., label = 'Sobre los laboratorios virtuales en la PUCP, ¿Ha utilizado los laboratorios virtuales de la PUCP?')), 
+ across(last_name, ~set_label(., label = 'last_name')), 
+ across(mision_univ, ~set_label(., label = '...la misión de la universidad?')), 
+ across(normas_accesible, ~set_label(., label = '¿Consideras que la información que brinda la universidad sobre las normas y los reglamentos institucionales es… - … accesible?')), 
+ across(normas_util, ~set_label(., label = '¿Consideras que la información que brinda la universidad sobre las normas y los reglamentos institucionales es… - … útil?')), 
+ across(objetivos_accesible, ~set_label(., label = '¿Consideras que la información que brinda la universidad sobre los objetivos es… - … accesible?')), 
+ across(objetivos_util, ~set_label(., label = '¿Consideras que la información que brinda la universidad sobre los objetivos es… - … útil?')), 
+ across(oport_internacional_satisf, ~set_label(., label = 'Las oportunidades de internacionalización que se ofrecen (intercambios, pasantías, estancias, programas de doble titulación, cursos a cargo de profesores internacionales)')), 
+ across(paideia_satisf, ~set_label(., label = 'Plataforma de enseñanza-aprendizaje PAIDEIA')), 
+ across(perfil_accesible, ~set_label(., label = '...las especialidades o programas que ofrece y los perfiles de egreso… - ¿Es accesible?')), 
+ across(perfil_util, ~set_label(., label = '...las especialidades o programas que ofrece y los perfiles de egreso… - ¿Es útil?')), 
+ across(princ_eticos_conoce, ~set_label(., label = 'Sobre los principios éticos en la investigación, ¿Conoce los principios éticos que guían la investigación en la PUCP?')), 
+ across(prof_investiga_ext, ~set_label(., label = '¿Los profesores, en mis cursos, promueven que consulte investigaciones recientes… - ...producidas por investigadores externos?')), 
+ across(prof_investiga_pucp, ~set_label(., label = '¿Los profesores, en mis cursos, promueven que consulte investigaciones recientes… - ...producidas por investigadores de la PUCP?')), 
+ across(promo_eventos_ext, ~set_label(., label = '¿La PUCP promueve eventos académicos (conversatorios, seminarios, coloquios, talleres, etc.) donde se presentan investigaciones recientes o de mi especialidad… - ...producidas por investigadores externos?')), 
+ across(promo_eventos_pucp, ~set_label(., label = '¿La universidad promueve eventos académicos (conversatorios, seminarios, coloquios, talleres, etc.) donde se presentan investigaciones recientes o de mi especialidad… - ...producidas por investigadores de la universidad?')), 
+ across(psico_conoce, ~set_label(., label = 'Bienestar Psicológico - ¿Lo conoce?')), 
+ across(psico_util, ~set_label(., label = 'Bienestar Psicológico - ¿Le fue útil?')), 
+ across(psico_utilizado, ~set_label(., label = 'Bienestar Psicológico - ¿Lo ha utilizado?')), 
+ across(publico, ~set_label(., label = 'Público objetivo')), 
+ across(reclamos_accesible, ~set_label(., label = '...los procedimientos para reclamos (con relación a los trámites académicos, administrativos y a los servicios que ofrece en general)… - ¿Es accesible?')), 
+ across(reclamos_util, ~set_label(., label = '...los procedimientos para reclamos (con relación a los trámites académicos, administrativos y a los servicios que ofrece en general)… - ¿Es útil?')), 
+ across(recomienda_empresa, ~set_label(., label = '¿Qué tan probable es que recomiendes esta empresa a tus amigos, compañeros de trabajo o familiares?')), 
+ across(req_acad_internacional_satisf, ~set_label(., label = 'Los requisitos académicos para acceder a los programas de intercambio o  a las oportunidades de intternacionalización')), 
+ across(respondent_id, ~set_label(., label = 'respondent_id')), 
+ across(salud_conoce, ~set_label(., label = 'Servicio de Salud - ¿Lo conoce?')), 
+ across(salud_util, ~set_label(., label = 'Servicio de Salud - ¿Le fue útil?')), 
+ across(salud_utilizado, ~set_label(., label = 'Servicio de Salud - ¿Lo ha utilizado?')), 
+ across(servicios_prest_satisf, ~set_label(., label = 'Los servicios prestados por las bibliotecas o centros de información(asesorías, atención a personas con discapacidad visual, digitalización, préstamo a pedido, provisión de documentos, publicaciones para la docencia)')), 
+ across(socio_econ_conoce, ~set_label(., label = 'Atención socio- económica - ¿Lo conoce?')), 
+ across(socio_econ_util, ~set_label(., label = 'Atención socio- económica - ¿Le fue útil?')), 
+ across(socio_econ_utilizado, ~set_label(., label = 'Atención socio- económica - ¿Lo ha utilizado?')), 
+ across(tutoria_participa, ~set_label(., label = '¿Alguna vez ha participado en el servicio de tutoría de la facultad, especialidad, o del programa en el que actualmente estudia?')), 
+ across(tutoria_util, ~set_label(., label = '¿El servicio de tutoría brindado ha sido útil?')), 
+ across(valores_univ, ~set_label(., label = '...los valores institucionales de la universidad?')), 
+ across(vision_univ, ~set_label(., label = '...la visión  de la universidad?')), 
+ across(zoom_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la Plataforma de videoconferencias ZOOM')), 
+  )
+```
+
+# Limpieza alumnos CENTRUM
+
+```{r}
+#| label: limpieza profunda alumnos centrum1
+
+alum_centrum3<-
+  alum_centrum2 %>% 
+  rename_with( ~ str_replace(.x, pattern = 'q0001', replacement = 'aclaracion'), matches( '\\b(q0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0006_0002', replacement = 'act_cultural_satisf'), matches( '\\b(q0006_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0014_0003_0001', replacement = 'act_profesional_conoce'), matches( '\\b(q0014_0003_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0014_0003_0003', replacement = 'act_profesional_util'), matches( '\\b(q0014_0003_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0014_0003_0002', replacement = 'act_profesional_utilizado'), matches( '\\b(q0014_0003_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0011_0002', replacement = 'actualiza_libros_satisf'), matches( '\\b(q0011_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0002_0001', replacement = 'admision_accesible'), matches( '\\b(q0003_0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0002_0002', replacement = 'admision_util'), matches( '\\b(q0003_0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0008_0001', replacement = 'atencion_padmin_satisf'), matches( '\\b(q0008_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0004', replacement = 'aulas_capacidad_satisf'), matches( '\\b(q0016_0004)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0003', replacement = 'aulas_disponibilidad_satisf'), matches( '\\b(q0016_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0002', replacement = 'aulas_equipamiento_satisf'), matches( '\\b(q0016_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0001', replacement = 'aulas_mantenimiento_satisf'), matches( '\\b(q0016_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0015', replacement = 'aulas_utilizado'), matches( '\\b(q0015)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0010_0002', replacement = 'bases_de_datos_satisf'), matches( '\\b(q0010_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0012', replacement = 'biblio_atencion'), matches( '\\b(q0012)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0004', replacement = 'biblio_capacidad_satisf'), matches( '\\b(q0018_0004)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0003', replacement = 'biblio_disponibilidad_satisf'), matches( '\\b(q0018_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0002', replacement = 'biblio_equipamiento_satisf'), matches( '\\b(q0018_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0003_0002', replacement = 'biblio_investiga_ext'), matches( '\\b(q0019_0003_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0003_0001', replacement = 'biblio_investiga_pucp'), matches( '\\b(q0019_0003_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0001', replacement = 'biblio_mantenimiento_satisf'), matches( '\\b(q0018_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0011_0001', replacement = 'bibliopucp_satisf'), matches( '\\b(q0011_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0017', replacement = 'bibliotecas_utilizado'), matches( '\\b(q0017)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0009_0001', replacement = 'campus_virtual_satisf'), matches( '\\b(q0009_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0009_0002', replacement = 'canvas_satisf'), matches( '\\b(q0009_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0014_0005_0001', replacement = 'charla_empleo_conoce'), matches( '\\b(q0014_0005_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0014_0005_0003', replacement = 'charla_empleo_util'), matches( '\\b(q0014_0005_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0014_0005_0002', replacement = 'charla_empleo_utilizado'), matches( '\\b(q0014_0005_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'collector_id', replacement = 'collector_id'), matches( '\\b(collector_id)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'collector_nm', replacement = 'collector_nm'), matches( '\\b(collector_nm)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0004_0001', replacement = 'comunica_inst_satisf'), matches( '\\b(q0004_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0005', replacement = 'culturales_informado'), matches( '\\b(q0005)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0004_0001', replacement = 'cursos_accesible'), matches( '\\b(q0003_0004_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0004_0002', replacement = 'cursos_util'), matches( '\\b(q0003_0004_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'custom_1', replacement = 'custom_1'), matches( '\\b(custom_1)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'date_created', replacement = 'date_created'), matches( '\\b(date_created)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'date_modified', replacement = 'date_modified'), matches( '\\b(date_modified)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0001_0001', replacement = 'deporte_conoce'), matches( '\\b(q0013_0001_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0001_0003', replacement = 'deporte_util'), matches( '\\b(q0013_0001_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0001_0002', replacement = 'deporte_utilizado'), matches( '\\b(q0013_0001_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0014_0002_0001', replacement = 'developme_conoce'), matches( '\\b(q0014_0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0014_0002_0003', replacement = 'developme_util'), matches( '\\b(q0014_0002_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0014_0002_0002', replacement = 'developme_utilizado'), matches( '\\b(q0014_0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'email_address', replacement = 'email_address'), matches( '\\b(email_address)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0014_0004_0001', replacement = 'empleabilidad_conoce'), matches( '\\b(q0014_0004_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0014_0004_0003', replacement = 'empleabilidad_util'), matches( '\\b(q0014_0004_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0014_0004_0002', replacement = 'empleabilidad_utilizado'), matches( '\\b(q0014_0004_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0022_0003', replacement = 'fac_eco_internacional_satisf'), matches( '\\b(q0022_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'first_name', replacement = 'first_name'), matches( '\\b(first_name)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0007_0001', replacement = 'gestion_padmin_satisf'), matches( '\\b(q0007_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0006_0001', replacement = 'grado_accesible'), matches( '\\b(q0003_0006_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0006_0002', replacement = 'grado_util'), matches( '\\b(q0003_0006_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0023', replacement = 'id'), matches( '\\b(q0023)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0021_0002', replacement = 'incluyo_investiga'), matches( '\\b(q0021_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0021_0001', replacement = 'incluyo_rsu'), matches( '\\b(q0021_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0006_0001', replacement = 'info_cultural_satisf'), matches( '\\b(q0006_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0008_0001', replacement = 'info_instit_accesible'), matches( '\\b(q0003_0008_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0008_0002', replacement = 'info_instit_util'), matches( '\\b(q0003_0008_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0022_0004', replacement = 'internacional_satisf'), matches( '\\b(q0022_0004)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'ip_address', replacement = 'ip_address'), matches( '\\b(ip_address)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'last_name', replacement = 'last_name'), matches( '\\b(last_name)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0010_0001', replacement = 'libros_satisf'), matches( '\\b(q0010_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0002_0001', replacement = 'mision_univ'), matches( '\\b(q0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0005_0001', replacement = 'normas_accesible'), matches( '\\b(q0003_0005_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0005_0002', replacement = 'normas_util'), matches( '\\b(q0003_0005_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0001_0001', replacement = 'objetivos_accesible'), matches( '\\b(q0003_0001_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0001_0002', replacement = 'objetivos_util'), matches( '\\b(q0003_0001_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0022_0001', replacement = 'oport_internacional_satisf'), matches( '\\b(q0022_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0014_0001_0001', replacement = 'optimiza_cv_conoce'), matches( '\\b(q0014_0001_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0014_0001_0003', replacement = 'optimiza_cv_util'), matches( '\\b(q0014_0001_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0014_0001_0002', replacement = 'optimiza_cv_utilizado'), matches( '\\b(q0014_0001_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0003_0001', replacement = 'perfil_accesible'), matches( '\\b(q0003_0003_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0003_0002', replacement = 'perfil_util'), matches( '\\b(q0003_0003_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020', replacement = 'princ_eticos_conoce'), matches( '\\b(q0020)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0001_0002', replacement = 'prof_investiga_ext'), matches( '\\b(q0019_0001_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0001_0001', replacement = 'prof_investiga_pucp'), matches( '\\b(q0019_0001_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0002_0002', replacement = 'promo_eventos_ext'), matches( '\\b(q0019_0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0002_0001', replacement = 'promo_eventos_pucp'), matches( '\\b(q0019_0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0003_0001', replacement = 'psico_conoce'), matches( '\\b(q0013_0003_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0003_0003', replacement = 'psico_util'), matches( '\\b(q0013_0003_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0003_0002', replacement = 'psico_utilizado'), matches( '\\b(q0013_0003_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'publico', replacement = 'publico'), matches( '\\b(publico)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0007_0001', replacement = 'reclamos_accesible'), matches( '\\b(q0003_0007_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0007_0002', replacement = 'reclamos_util'), matches( '\\b(q0003_0007_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0022_0002', replacement = 'req_acad_internacional_satisf'), matches( '\\b(q0022_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'respondent_id', replacement = 'respondent_id'), matches( '\\b(respondent_id)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0002_0001', replacement = 'salud_conoce'), matches( '\\b(q0013_0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0002_0003', replacement = 'salud_util'), matches( '\\b(q0013_0002_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0002_0002', replacement = 'salud_utilizado'), matches( '\\b(q0013_0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0011_0003', replacement = 'servicios_prest_satisf'), matches( '\\b(q0011_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0002_0003', replacement = 'valores_univ'), matches( '\\b(q0002_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0002_0002', replacement = 'vision_univ'), matches( '\\b(q0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0009_0003', replacement = 'zoom_satisf'), matches( '\\b(q0009_0003)\\b')) %>% 
+  mutate(
+ across(aclaracion, ~set_label(., label = 'Hecha esta aclaración, ¿desea continuar con la encuesta?')), 
+ across(act_cultural_satisf, ~set_label(., label = 'La variedad de actividades culturales que promueve la PUCP')), 
+ across(act_profesional_conoce, ~set_label(., label = 'Actividades para potenciar el perfil profesional: talleres, cursos online, charlas y seminarios webs para potenciar la empleabilidad. - ¿Lo conoce?')), 
+ across(act_profesional_util, ~set_label(., label = 'Actividades para potenciar el perfil profesional: talleres, cursos online, charlas y seminarios webs para potenciar la empleabilidad. - ¿Le fue útil?')), 
+ across(act_profesional_utilizado, ~set_label(., label = 'Actividades para potenciar el perfil profesional: talleres, cursos online, charlas y seminarios webs para potenciar la empleabilidad. - ¿Lo ha utilizado?')), 
+ across(actualiza_libros_satisf, ~set_label(., label = 'La actualización de los recursos (bases de datos, e-books, revistas electrónicas, libros y revistas impresas, guías temáticas, repositorios, etc.) con información vigente para mi especialidad')), 
+ across(admision_accesible, ~set_label(., label = '...los requisitos de admisión… - ¿Es accesible?')), 
+ across(admision_util, ~set_label(., label = '...los requisitos de admisión… - ¿Es útil?')), 
+ across(atencion_padmin_satisf, ~set_label(., label = 'La atención que brinda el personal administrativo PUCP (durante los trámites administrativos y académicos)')), 
+ across(aulas_capacidad_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la capacidad de las aulas PUCP')), 
+ across(aulas_disponibilidad_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la disponibilidad de las aulas PUCP')), 
+ across(aulas_equipamiento_satisf, ~set_label(., label = 'Nivel de satisfacción respecto al equipamiento de las aulas PUCP')), 
+ across(aulas_mantenimiento_satisf, ~set_label(., label = 'Nivel de satisfacción respecto al mantenimiento de las aulas PUCP')), 
+ across(aulas_utilizado, ~set_label(., label = 'Sobre la infraestructura física y el equipamiento de las aulas, ¿Ha utilizado las aulas de la universidad (ha asistido a clases o eventos presenciales en ellas)?')), 
+ across(bases_de_datos_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la disponibilidad de bases de datos relevantes para mi programa de estudios')), 
+ across(biblio_atencion, ~set_label(., label = 'En general, considera que las bibliotecas y/o centro de información y referencia atendieron a sus necesidades como estudiante')), 
+ across(biblio_capacidad_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la capacidad de las Bibliotecas PUCP')), 
+ across(biblio_disponibilidad_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la disponibilidad de las Bibliotecas PUCP')), 
+ across(biblio_equipamiento_satisf, ~set_label(., label = 'Nivel de satisfacción respecto al equipamiento de las Bibliotecas PUCP')), 
+ across(biblio_investiga_ext, ~set_label(., label = '¿Las bibliotecas y/o centros de información brindan acceso a investigaciones actualizadas (recientes)…(no incluir tesis de estudiantes pregrado y posgrado)… - ...producidas por investigadores externos?')), 
+ across(biblio_investiga_pucp, ~set_label(., label = '¿Las bibliotecas y/o centros de información brindan acceso a investigaciones actualizadas (recientes)…(no incluir tesis de estudiantes pregrado y posgrado)… - ...producidas por investigadores de la PUCP?')), 
+ across(biblio_mantenimiento_satisf, ~set_label(., label = 'Nivel de satisfacción respecto al mantenimiento de las Bibliotecas PUCP')), 
+ across(bibliopucp_satisf, ~set_label(., label = 'El acceso a los recursos (catálogo en línea, bases de datos, e-books, revistas electrónicas, libros y revistas impresas, guías temáticas, repositorios, tutoriales, podcast, etc.) de las bibliotecas PUCP')), 
+ across(bibliotecas_utilizado, ~set_label(., label = 'Sobre las bibliotecas y/o centros de información y referencia, ¿Ha utilizado las bibliotecas y/o centros de información y referencia de la universidad?')), 
+ across(campus_virtual_satisf, ~set_label(., label = 'Nivel de satisfacción respecto al campus virtual')), 
+ across(canvas_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a CANVAS')), 
+ across(charla_empleo_conoce, ~set_label(., label = 'Comunicaciones: información necesaria para acceder a las plataformas de empleo, eventos y cursos online vía correo electrónico. - ¿Lo conoce?')), 
+ across(charla_empleo_util, ~set_label(., label = 'Comunicaciones: información necesaria para acceder a las plataformas de empleo, eventos y cursos online vía correo electrónico. - ¿Le fue útil?')), 
+ across(charla_empleo_utilizado, ~set_label(., label = 'Comunicaciones: información necesaria para acceder a las plataformas de empleo, eventos y cursos online vía correo electrónico. - ¿Lo ha utilizado?')), 
+ across(collector_id, ~set_label(., label = 'collector_id')), 
+ across(collector_nm, ~set_label(., label = 'CollectorNm')), 
+ across(comunica_inst_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la comunicación institucional PUCP')), 
+ across(culturales_informado, ~set_label(., label = 'Sobre las actividades culturales:¿Ha sido informado por la PUCP sobre las actividades culturales (cine, teatro, exposiciones artísticas, presentaciones musicales, etc.) que se ofrecen al público general?')), 
+ across(cursos_accesible, ~set_label(., label = '...los planes de estudios y cursos… - ¿Es accesible?')), 
+ across(cursos_util, ~set_label(., label = '...los planes de estudios y cursos… - ¿Es útil?')), 
+ across(custom_1, ~set_label(., label = 'custom_1')), 
+ across(date_created, ~set_label(., label = 'date_created')), 
+ across(date_modified, ~set_label(., label = 'date_modified')), 
+ across(deporte_conoce, ~set_label(., label = 'Servicio de actividad física y deportes - ¿Lo conoce?')), 
+ across(deporte_util, ~set_label(., label = 'Servicio de actividad física y deporte - ¿Le fue útil?')), 
+ across(deporte_utilizado, ~set_label(., label = 'Servicio de actividad física y deportes - ¿Lo ha utilizado?')), 
+ across(developme_conoce, ~set_label(., label = 'Acceso a la herramienta DevelopMe™ - ¿Lo conoce?')), 
+ across(developme_util, ~set_label(., label = 'Acceso a la herramienta DevelopMe™ - ¿Le fue útil?')), 
+ across(developme_utilizado, ~set_label(., label = 'Acceso a la herramienta DevelopMe™ - ¿Lo ha utilizado?')), 
+ across(email_address, ~set_label(., label = 'email_address')), 
+ across(empleabilidad_conoce, ~set_label(., label = 'Empleabilidad - ¿Lo conoce?')), 
+ across(empleabilidad_util, ~set_label(., label = 'Empleabilidad - ¿Le fue útil?')), 
+ across(empleabilidad_utilizado, ~set_label(., label = 'Empleabilidad - ¿Lo ha utilizado?')), 
+ across(fac_eco_internacional_satisf, ~set_label(., label = 'Las facilidades económicas para acceder a los programas de intercambio o a las oportunidades de internacionalización')), 
+ across(first_name, ~set_label(., label = 'first_name')), 
+ across(gestion_padmin_satisf, ~set_label(., label = 'La gestión de los procesos académico-administrativos (matrícula, registro de notas, emisión de constancias y diplomas, información personal, entre otros)')), 
+ across(grado_accesible, ~set_label(., label = '...la obtención del grado y/o título profesional… - ¿Es accesible?')), 
+ across(grado_util, ~set_label(., label = '...la obtención del grado y/o título profesional… - ¿Es útil?')), 
+ across(id, ~set_label(., label = 'id')), 
+ across(incluyo_investiga, ~set_label(., label = '¿Considera que el plan de estudios incluyó actividades orientadas a la investigación?')), 
+ across(incluyo_rsu, ~set_label(., label = '¿Considera que el plan de estudios incluyó actividades orientadas a la responsabilidad social universitaria?')), 
+ across(info_cultural_satisf, ~set_label(., label = 'La información que ofrece la PUCP sobre las actividades culturales que promueve')), 
+ across(info_instit_accesible, ~set_label(., label = 'En general, la información institucional... - ¿Es accesible?')), 
+ across(info_instit_util, ~set_label(., label = 'En general, la información institucional... - ¿Es útil?')), 
+ across(internacional_satisf, ~set_label(., label = 'En general, ¿qué tan satisfecho te encuentras con la oferta de programas de intercambio o con las oportunidades de internacionalización ofrecidas?')), 
+ across(ip_address, ~set_label(., label = 'ip_address')), 
+ across(last_name, ~set_label(., label = 'last_name')), 
+ across(libros_satisf, ~set_label(., label = 'La disponibilidad de libros relevantes para mi programa de estudios')), 
+ across(mision_univ, ~set_label(., label = '...la misión de la universidad?')), 
+ across(normas_accesible, ~set_label(., label = '¿Consideras que la información que brinda la universidad sobre las normas y los reglamentos institucionales es… - … accesible?')), 
+ across(normas_util, ~set_label(., label = '¿Consideras que la información que brinda la universidad sobre las normas y los reglamentos institucionales es… - … útil?')), 
+ across(objetivos_accesible, ~set_label(., label = '¿Consideras que la información que brinda la universidad sobre los objetivos es… - … accesible?')), 
+ across(objetivos_util, ~set_label(., label = '¿Consideras que la información que brinda la universidad sobre los objetivos es… - … útil?')), 
+ across(oport_internacional_satisf, ~set_label(., label = 'Las oportunidades de internacionalización que se ofrecen (intercambios, pasantías, estancias, programas de doble titulación, cursos a cargo de profesores internacionales)')), 
+ across(optimiza_cv_conoce, ~set_label(., label = 'Plan de carrera para estudiantes y graduados: para optimización de CV y perfil profesional con especialistas en reclutamiento de talento - ¿Lo conoce?')), 
+ across(optimiza_cv_util, ~set_label(., label = 'Plan de carrera para estudiantes y graduados: para optimización de CV y perfil profesional con especialistas en reclutamiento de talento - ¿Le fue útil?')), 
+ across(optimiza_cv_utilizado, ~set_label(., label = 'Plan de carrera para estudiantes y graduados: para optimización de CV y perfil profesional con especialistas en reclutamiento de talento - ¿Lo ha utilizado?')), 
+ across(perfil_accesible, ~set_label(., label = '...las especialidades o programas que ofrece y los perfiles de egreso… - ¿Es accesible?')), 
+ across(perfil_util, ~set_label(., label = '...las especialidades o programas que ofrece y los perfiles de egreso… - ¿Es útil?')), 
+ across(princ_eticos_conoce, ~set_label(., label = 'Sobre los principios éticos en la investigación, ¿Conoce los principios éticos que guían la investigación en la PUCP?')), 
+ across(prof_investiga_ext, ~set_label(., label = '¿Los profesores, en mis cursos, promueven que consulte investigaciones recientes… - ...producidas por investigadores externos?')), 
+ across(prof_investiga_pucp, ~set_label(., label = '¿Los profesores, en mis cursos, promueven que consulte investigaciones recientes… - ...producidas por investigadores de la PUCP?')), 
+ across(promo_eventos_ext, ~set_label(., label = '¿La PUCP promueve eventos académicos (conversatorios, seminarios, coloquios, talleres, etc.) donde se presentan investigaciones recientes o de mi especialidad… - ...producidas por investigadores externos?')), 
+ across(promo_eventos_pucp, ~set_label(., label = '¿La universidad promueve eventos académicos (conversatorios, seminarios, coloquios, talleres, etc.) donde se presentan investigaciones recientes o de mi especialidad… - ...producidas por investigadores de la universidad?')), 
+ across(psico_conoce, ~set_label(., label = 'Bienestar Psicológico - ¿Lo conoce?')), 
+ across(psico_util, ~set_label(., label = 'Bienestar Psicológico - ¿Le fue útil?')), 
+ across(psico_utilizado, ~set_label(., label = 'Bienestar Psicológico - ¿Lo ha utilizado?')), 
+ across(publico, ~set_label(., label = 'Público objetivo')), 
+ across(reclamos_accesible, ~set_label(., label = '...los procedimientos para reclamos (con relación a los trámites académicos, administrativos y a los servicios que ofrece en general)… - ¿Es accesible?')), 
+ across(reclamos_util, ~set_label(., label = '...los procedimientos para reclamos (con relación a los trámites académicos, administrativos y a los servicios que ofrece en general)… - ¿Es útil?')), 
+ across(req_acad_internacional_satisf, ~set_label(., label = 'Los requisitos académicos para acceder a los programas de intercambio o  a las oportunidades de intternacionalización')), 
+ across(respondent_id, ~set_label(., label = 'respondent_id')), 
+ across(salud_conoce, ~set_label(., label = 'Servicio de Salud - ¿Lo conoce?')), 
+ across(salud_util, ~set_label(., label = 'Servicio de Salud - ¿Le fue útil?')), 
+ across(salud_utilizado, ~set_label(., label = 'Servicio de Salud - ¿Lo ha utilizado?')), 
+ across(servicios_prest_satisf, ~set_label(., label = 'Los servicios prestados por las bibliotecas o centros de información(asesorías, atención a personas con discapacidad visual, digitalización, préstamo a pedido, provisión de documentos, publicaciones para la docencia)')), 
+ across(valores_univ, ~set_label(., label = '...los valores institucionales de la universidad?')), 
+ across(vision_univ, ~set_label(., label = '...la visión  de la universidad?')), 
+ across(zoom_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la Plataforma de videoconferencias ZOOM')), 
+  )
+
+
+```
+
+# Docentes PUCP
+
+```{r}
+#| label: limpieza profunda docentes pucp1
+doc3<-
+  doc2 %>% 
+  rename_with( ~ str_replace(.x, pattern = 'q0001', replacement = 'aclaracion'), matches( '\\b(q0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0002', replacement = 'actualiza_libros_satisf'), matches( '\\b(q0020_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0006_0001', replacement = 'atencion_padmin_satisf'), matches( '\\b(q0006_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0022_0002_0002', replacement = 'biblio_investiga_ext'), matches( '\\b(q0022_0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0022_0002_0001', replacement = 'biblio_investiga_pucp'), matches( '\\b(q0022_0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0001', replacement = 'bibliopucp_satisf'), matches( '\\b(q0020_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0001', replacement = 'campus_virtual_satisf'), matches( '\\b(q0019_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0001_0002', replacement = 'centuria_accesible'), matches( '\\b(q0018_0001_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0001_0003', replacement = 'centuria_util'), matches( '\\b(q0018_0001_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0001_0001', replacement = 'centuria_utilizado'), matches( '\\b(q0018_0001_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'collector_id', replacement = 'collector_id'), matches( '\\b(collector_id)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'collector_nm', replacement = 'collector_nm'), matches( '\\b(collector_nm)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0004_0001', replacement = 'comunica_inst_satisf'), matches( '\\b(q0004_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0025', replacement = 'conectividad_accede'), matches( '\\b(q0025)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0026_0001', replacement = 'conectividad_satisf'), matches( '\\b(q0026_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0012', replacement = 'conoce_ingr_docencia'), matches( '\\b(q0012)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0014', replacement = 'conoce_permanencia'), matches( '\\b(q0014)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016', replacement = 'conoce_promocion'), matches( '\\b(q0016)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0011_0001', replacement = 'contratacion_satisf'), matches( '\\b(q0011_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'custom_1', replacement = 'custom_1'), matches( '\\b(custom_1)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0004_0002', replacement = 'cvpucp_accesible'), matches( '\\b(q0018_0004_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0004_0003', replacement = 'cvpucp_util'), matches( '\\b(q0018_0004_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0004_0001', replacement = 'cvpucp_utilizado'), matches( '\\b(q0018_0004_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'date_created', replacement = 'date_created'), matches( '\\b(date_created)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'date_modified', replacement = 'date_modified'), matches( '\\b(date_modified)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0021_0001_0001', replacement = 'deporte_conoce'), matches( '\\b(q0021_0001_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0021_0001_0003', replacement = 'deporte_util'), matches( '\\b(q0021_0001_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0021_0001_0002', replacement = 'deporte_utilizado'), matches( '\\b(q0021_0001_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0007_0002', replacement = 'docencia_rec_edu'), matches( '\\b(q0007_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0007_0004', replacement = 'docencia_rec_finan'), matches( '\\b(q0007_0004)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0007_0003', replacement = 'docencia_rec_fisic'), matches( '\\b(q0007_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0007_0001', replacement = 'docencia_rec_hum'), matches( '\\b(q0007_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'email_address', replacement = 'email_address'), matches( '\\b(email_address)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0028_0001', replacement = 'equipamiento_satisf'), matches( '\\b(q0028_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0027', replacement = 'equipoinf_accede'), matches( '\\b(q0027)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'first_name', replacement = 'first_name'), matches( '\\b(first_name)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0005_0001', replacement = 'gestion_padmin_satisf'), matches( '\\b(q0005_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0029', replacement = 'id'), matches( '\\b(q0029)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0024_0002', replacement = 'info_internacional_satisf'), matches( '\\b(q0024_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0001', replacement = 'ingreso_docencia_satisf'), matches( '\\b(q0013_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0008_0002', replacement = 'investiga_rec_edu'), matches( '\\b(q0008_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0008_0004', replacement = 'investiga_rec_finan'), matches( '\\b(q0008_0004)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0008_0003', replacement = 'investiga_rec_fisic'), matches( '\\b(q0008_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0008_0001', replacement = 'investiga_rec_hum'), matches( '\\b(q0008_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'ip_address', replacement = 'ip_address'), matches( '\\b(ip_address)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'last_name', replacement = 'last_name'), matches( '\\b(last_name)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0002_0001', replacement = 'mision_univ'), matches( '\\b(q0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0002_0001', replacement = 'normas_accesible'), matches( '\\b(q0003_0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0002_0002', replacement = 'normas_util'), matches( '\\b(q0003_0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0001_0001', replacement = 'objetivos_accesible'), matches( '\\b(q0003_0001_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0001_0002', replacement = 'objetivos_util'), matches( '\\b(q0003_0001_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0009_0001', replacement = 'oport_pedag_satisf'), matches( '\\b(q0009_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0009_0002', replacement = 'oport_profesional_satisf'), matches( '\\b(q0009_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0002', replacement = 'paideia_satisf'), matches( '\\b(q0019_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0015_0001', replacement = 'permanencia_satisf'), matches( '\\b(q0015_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0023', replacement = 'princ_eticos_conoce'), matches( '\\b(q0023)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0010', replacement = 'proc_contratacion_conoce'), matches( '\\b(q0010)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0022_0001_0002', replacement = 'promo_eventos_ext'), matches( '\\b(q0022_0001_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0022_0001_0001', replacement = 'promo_eventos_pucp'), matches( '\\b(q0022_0001_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0017_0001', replacement = 'promocion_docente_satisf'), matches( '\\b(q0017_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'publico', replacement = 'publico'), matches( '\\b(publico)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0024_0001', replacement = 'relacion_internacional_satisf'), matches( '\\b(q0024_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'respondent_id', replacement = 'respondent_id'), matches( '\\b(respondent_id)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0002_0002', replacement = 'sag_accesible'), matches( '\\b(q0018_0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0002_0003', replacement = 'sag_util'), matches( '\\b(q0018_0002_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0002_0001', replacement = 'sag_utilizado'), matches( '\\b(q0018_0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0021_0002_0001', replacement = 'salud_conoce'), matches( '\\b(q0021_0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0021_0002_0003', replacement = 'salud_util'), matches( '\\b(q0021_0002_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0021_0002_0002', replacement = 'salud_utilizado'), matches( '\\b(q0021_0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0003', replacement = 'servicios_prest_satisf'), matches( '\\b(q0020_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0003_0002', replacement = 'sicop_accesible'), matches( '\\b(q0018_0003_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0003_0003', replacement = 'sicop_util'), matches( '\\b(q0018_0003_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0003_0001', replacement = 'sicop_utilizado'), matches( '\\b(q0018_0003_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0002_0003', replacement = 'valores_univ'), matches( '\\b(q0002_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0002_0002', replacement = 'vision_univ'), matches( '\\b(q0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0003', replacement = 'zoom_satisf'), matches( '\\b(q0019_0003)\\b')) %>% 
+  mutate(
+ across(aclaracion, ~set_label(., label = 'Hecha esta aclaración, ¿desea continuar con la encuesta?')), 
+ across(actualiza_libros_satisf, ~set_label(., label = 'La actualización de los recursos (bases de datos, e-books, revistas electrónicas, libros y revistas impresas, guías temáticas, repositorios, etc.) con información vigente para mi especialidad')), 
+ across(atencion_padmin_satisf, ~set_label(., label = 'La atención que brinda el personal administrativo PUCP (durante los trámites administrativos y académicos)')), 
+ across(biblio_investiga_ext, ~set_label(., label = '¿Las bibliotecas y/o centros de información brindan acceso a investigaciones actualizadas (recientes)…(no incluir tesis de estudiantes pregrado y posgrado)… - ...producidas por investigadores externos?')), 
+ across(biblio_investiga_pucp, ~set_label(., label = '¿Las bibliotecas y/o centros de información brindan acceso a investigaciones actualizadas (recientes)…(no incluir tesis de estudiantes pregrado y posgrado)… - ...producidas por investigadores de la PUCP?')), 
+ across(bibliopucp_satisf, ~set_label(., label = 'El acceso a los recursos (catálogo en línea, bases de datos, e-books, revistas electrónicas, libros y revistas impresas, guías temáticas, repositorios, tutoriales, podcast, etc.) de las bibliotecas PUCP')), 
+ across(campus_virtual_satisf, ~set_label(., label = 'Nivel de satisfacción respecto al campus virtual')), 
+ across(centuria_accesible, ~set_label(., label = 'CENTURIA - ¿Es accesible?')), 
+ across(centuria_util, ~set_label(., label = 'CENTURIA - ¿Es útil?')), 
+ across(centuria_utilizado, ~set_label(., label = 'CENTURIA - ¿Lo ha utilizado?')), 
+ across(collector_id, ~set_label(., label = 'collector_id')), 
+ across(collector_nm, ~set_label(., label = 'CollectorNm')), 
+ across(comunica_inst_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la comunicación institucional PUCP')), 
+ across(conectividad_accede, ~set_label(., label = 'Sobre los recursos de apoyo a la formación brindados por la PUCP durante la pandemia:¿Accedió a conexión a internet del Fondo de Conectividad PUCP?')), 
+ across(conectividad_satisf, ~set_label(., label = 'En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique cuál es su nivel de satisfacción con la conexión a internet del fondo de conectividad PUCP:')), 
+ across(conoce_ingr_docencia, ~set_label(., label = '¿Conoce el proceso de ingreso a la docencia?')), 
+ across(conoce_permanencia, ~set_label(., label = '¿Conoce el proceso de permanencia?')), 
+ across(conoce_promocion, ~set_label(., label = '¿Conoce el proceso de promoción docente?')), 
+ across(contratacion_satisf, ~set_label(., label = 'En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique cuál es su nivel de satisfacción con el proceso de contratación:')), 
+ across(custom_1, ~set_label(., label = 'custom_1')), 
+ across(cvpucp_accesible, ~set_label(., label = 'CVPUCP - ¿Es accesible?')), 
+ across(cvpucp_util, ~set_label(., label = 'CVPUCP - ¿Es útil?')), 
+ across(cvpucp_utilizado, ~set_label(., label = 'CVPUCP - ¿Lo ha utilizado?')), 
+ across(date_created, ~set_label(., label = 'date_created')), 
+ across(date_modified, ~set_label(., label = 'date_modified')), 
+ across(deporte_conoce, ~set_label(., label = 'Servicio de actividad física y deportes - ¿Lo conoce?')), 
+ across(deporte_util, ~set_label(., label = 'Servicio de actividad física y deporte - ¿Le fue útil?')), 
+ across(deporte_utilizado, ~set_label(., label = 'Servicio de actividad física y deportes - ¿Lo ha utilizado?')), 
+ across(docencia_rec_edu, ~set_label(., label = '…recursos educacionales (colección bibliográfica, bases de datos bibliográficas, herramientas informáticas, materiales para los cursos, etc.) en la universidad o su programa/unidad permiten llevar a cabo las funciones de docencia sin dificultad?')), 
+ across(docencia_rec_finan, ~set_label(., label = '…recursos financieros en la universidad o su programa/unidad permiten llevar a cabo las funciones de docencia sin dificultad?')), 
+ across(docencia_rec_fisic, ~set_label(., label = '…recursos físicos (infraestructura, instalaciones y equipamiento) en la universidad o en su programa/unidad permiten llevar a cabo las funciones de docencia sin dificultad?')), 
+ across(docencia_rec_hum, ~set_label(., label = '…recursos humanos (profesores y personal administrativo) en la universidad o en su programa/unidad permiten llevar a cabo las funciones de docencia sin dificultad?')), 
+ across(email_address, ~set_label(., label = 'email_address')), 
+ across(equipamiento_satisf, ~set_label(., label = 'En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique cuál es su nivel de satisfacción con los equipos informáticos de la PUCP:')), 
+ across(equipoinf_accede, ~set_label(., label = '¿Accedió a equipos informáticos de la PUCP?')), 
+ across(first_name, ~set_label(., label = 'first_name')), 
+ across(gestion_padmin_satisf, ~set_label(., label = 'La gestión de los procesos académico-administrativos (matrícula, registro de notas, emisión de constancias y diplomas, información personal, entre otros)')), 
+ across(id, ~set_label(., label = 'id')), 
+ across(info_internacional_satisf, ~set_label(., label = 'La comunicación de la PUCP a los docentes sobre los mecanismos para hacer uso de los beneficios de internacionalización (estancias de docencia o de investigación, participación en eventos académicos, etc.)')), 
+ across(ingreso_docencia_satisf, ~set_label(., label = 'En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique cuál es su nivel de satisfacción con el proceso de ingreso a la docencia:')), 
+ across(investiga_rec_edu, ~set_label(., label = '…recursos educacionales (colección bibliográfica, bases de datos bibliográficas, herramientas informáticas, materiales para los cursos, etc.) en la universidad o su programa/unidad permiten llevar a cabo las funciones de investigación sin dificultad?')), 
+ across(investiga_rec_finan, ~set_label(., label = '…recursos financieros en la universidad o su programa/unidad permiten llevar a cabo las funciones de investigación sin dificultad?')), 
+ across(investiga_rec_fisic, ~set_label(., label = '…recursos físicos (infraestructura, instalaciones y equipamiento) en la universidad o su programa/unidad permiten llevar a cabo las funciones de investigación sin dificultad?')), 
+ across(investiga_rec_hum, ~set_label(., label = '…recursos humanos (profesores y personal administrativo) en la universidad o su programa/unidad permiten llevar a cabo las funciones de investigación sin dificultad?')), 
+ across(ip_address, ~set_label(., label = 'ip_address')), 
+ across(last_name, ~set_label(., label = 'last_name')), 
+ across(mision_univ, ~set_label(., label = '...la misión de la universidad?')), 
+ across(normas_accesible, ~set_label(., label = '¿Consideras que la información que brinda la universidad sobre las normas y los reglamentos institucionales es… - … accesible?')), 
+ across(normas_util, ~set_label(., label = '¿Consideras que la información que brinda la universidad sobre las normas y los reglamentos institucionales es… - … útil?')), 
+ across(objetivos_accesible, ~set_label(., label = '¿Consideras que la información que brinda la universidad sobre los objetivos es… - … accesible?')), 
+ across(objetivos_util, ~set_label(., label = '¿Consideras que la información que brinda la universidad sobre los objetivos es… - … útil?')), 
+ across(oport_pedag_satisf, ~set_label(., label = 'Las oportunidades de actualización pedagógica que ofrece la PUCP')), 
+ across(oport_profesional_satisf, ~set_label(., label = 'Las oportunidades de actualización profesional y disciplinaria que ofrece la PUCP')), 
+ across(paideia_satisf, ~set_label(., label = 'Plataforma de enseñanza-aprendizaje PAIDEIA')), 
+ across(permanencia_satisf, ~set_label(., label = 'En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique cuál es su nivel de satisfacción con el proceso de permanencia:')), 
+ across(princ_eticos_conoce, ~set_label(., label = 'Sobre los principios éticos en la investigación, ¿Conoce los principios éticos que guían la investigación en la PUCP?')), 
+ across(proc_contratacion_conoce, ~set_label(., label = 'Sobre los procesos de ingreso, permanencia y promoción docente: ¿Conoce el proceso de contratación?')), 
+ across(promo_eventos_ext, ~set_label(., label = '¿La PUCP promueve eventos académicos (conversatorios, seminarios, coloquios, talleres, etc.) donde se presentan investigaciones recientes o de mi especialidad… - ...producidas por investigadores externos?')), 
+ across(promo_eventos_pucp, ~set_label(., label = '¿La universidad promueve eventos académicos (conversatorios, seminarios, coloquios, talleres, etc.) donde se presentan investigaciones recientes o de mi especialidad… - ...producidas por investigadores de la universidad?')), 
+ across(promocion_docente_satisf, ~set_label(., label = 'En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique cuál es su nivel de satisfacción con el proceso de promoción docente:')), 
+ across(publico, ~set_label(., label = 'Público objetivo')), 
+ across(relacion_internacional_satisf, ~set_label(., label = 'La relación que la PUCP establece con universidades e instituciones en el extranjero (convenios, eventos académicos, intercambio docente, etc.)')), 
+ across(respondent_id, ~set_label(., label = 'respondent_id')), 
+ across(sag_accesible, ~set_label(., label = 'SAG - ¿Es accesible?')), 
+ across(sag_util, ~set_label(., label = 'SAG - ¿Es útil?')), 
+ across(sag_utilizado, ~set_label(., label = 'SAG - ¿Lo ha utilizado?')), 
+ across(salud_conoce, ~set_label(., label = 'Servicio de Salud - ¿Lo conoce?')), 
+ across(salud_util, ~set_label(., label = 'Servicio de Salud - ¿Le fue útil?')), 
+ across(salud_utilizado, ~set_label(., label = 'Servicio de Salud - ¿Lo ha utilizado?')), 
+ across(servicios_prest_satisf, ~set_label(., label = 'Los servicios prestados por las bibliotecas o centros de información(asesorías, atención a personas con discapacidad visual, digitalización, préstamo a pedido, provisión de documentos, publicaciones para la docencia)')), 
+ across(sicop_accesible, ~set_label(., label = 'SICOP - ¿Es accesible?')), 
+ across(sicop_util, ~set_label(., label = 'SICOP - ¿Es útil?')), 
+ across(sicop_utilizado, ~set_label(., label = 'SICOP - ¿Lo ha utilizado?')), 
+ across(valores_univ, ~set_label(., label = '...los valores institucionales de la universidad?')), 
+ across(vision_univ, ~set_label(., label = '...la visión  de la universidad?')), 
+ across(zoom_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la Plataforma de videoconferencias ZOOM')), 
+  )
+```
+
+# Docentes CENTRUM
+
+```{r}
+#| label: limpieza profunda docentes centrum1
+
+doc_centrum3<-
+  doc_centrum2 %>% 
+  rename_with( ~ str_replace(.x, pattern = 'q0001', replacement = 'aclaracion'), matches( '\\b(q0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0002', replacement = 'actualiza_libros_satisf'), matches( '\\b(q0018_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0006_0001', replacement = 'atencion_padmin_satisf'), matches( '\\b(q0006_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0002_0002', replacement = 'biblio_investiga_ext'), matches( '\\b(q0020_0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0002_0001', replacement = 'biblio_investiga_pucp'), matches( '\\b(q0020_0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0001', replacement = 'bibliopucp_satisf'), matches( '\\b(q0018_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0017_0001', replacement = 'campus_virtual_satisf'), matches( '\\b(q0017_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0017_0002', replacement = 'canvas_satisf'), matches( '\\b(q0017_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0001_0002', replacement = 'centuria_accesible'), matches( '\\b(q0016_0001_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0001_0003', replacement = 'centuria_util'), matches( '\\b(q0016_0001_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0001_0001', replacement = 'centuria_utilizado'), matches( '\\b(q0016_0001_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0004_0002', replacement = 'cisam_accesible'), matches( '\\b(q0016_0004_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0004_0003', replacement = 'cisam_util'), matches( '\\b(q0016_0004_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0004_0001', replacement = 'cisam_utilizado'), matches( '\\b(q0016_0004_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'collector_id', replacement = 'collector_id'), matches( '\\b(collector_id)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'collector_nm', replacement = 'collector_nm'), matches( '\\b(collector_nm)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0004_0001', replacement = 'comunica_inst_satisf'), matches( '\\b(q0004_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0023', replacement = 'conectividad_accede'), matches( '\\b(q0023)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0024_0001', replacement = 'conectividad_satisf'), matches( '\\b(q0024_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0010', replacement = 'conoce_ingr_docencia'), matches( '\\b(q0010)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0012', replacement = 'conoce_permanencia'), matches( '\\b(q0012)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0014', replacement = 'conoce_promocion'), matches( '\\b(q0014)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'custom_1', replacement = 'custom_1'), matches( '\\b(custom_1)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0003_0002', replacement = 'cvpucp_accesible'), matches( '\\b(q0016_0003_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0003_0003', replacement = 'cvpucp_util'), matches( '\\b(q0016_0003_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0003_0001', replacement = 'cvpucp_utilizado'), matches( '\\b(q0016_0003_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'date_created', replacement = 'date_created'), matches( '\\b(date_created)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'date_modified', replacement = 'date_modified'), matches( '\\b(date_modified)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0001_0001', replacement = 'deporte_conoce'), matches( '\\b(q0019_0001_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0001_0003', replacement = 'deporte_util'), matches( '\\b(q0019_0001_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0001_0002', replacement = 'deporte_utilizado'), matches( '\\b(q0019_0001_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0007_0002', replacement = 'docencia_rec_edu'), matches( '\\b(q0007_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0007_0004', replacement = 'docencia_rec_finan'), matches( '\\b(q0007_0004)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0007_0003', replacement = 'docencia_rec_fisic'), matches( '\\b(q0007_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0007_0001', replacement = 'docencia_rec_hum'), matches( '\\b(q0007_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'email_address', replacement = 'email_address'), matches( '\\b(email_address)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0026_0001', replacement = 'equipamiento_satisf'), matches( '\\b(q0026_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0025', replacement = 'equipoinf_accede'), matches( '\\b(q0025)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'first_name', replacement = 'first_name'), matches( '\\b(first_name)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0005_0001', replacement = 'gestion_padmin_satisf'), matches( '\\b(q0005_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0027', replacement = 'id'), matches( '\\b(q0027)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0022_0002', replacement = 'info_internacional_satisf'), matches( '\\b(q0022_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0011_0001', replacement = 'ingreso_docencia_satisf'), matches( '\\b(q0011_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0008_0002', replacement = 'investiga_rec_edu'), matches( '\\b(q0008_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0008_0004', replacement = 'investiga_rec_finan'), matches( '\\b(q0008_0004)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0008_0003', replacement = 'investiga_rec_fisic'), matches( '\\b(q0008_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0008_0001', replacement = 'investiga_rec_hum'), matches( '\\b(q0008_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'ip_address', replacement = 'ip_address'), matches( '\\b(ip_address)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'last_name', replacement = 'last_name'), matches( '\\b(last_name)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0002_0001', replacement = 'mision_univ'), matches( '\\b(q0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0002_0001', replacement = 'normas_accesible'), matches( '\\b(q0003_0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0002_0002', replacement = 'normas_util'), matches( '\\b(q0003_0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0001_0001', replacement = 'objetivos_accesible'), matches( '\\b(q0003_0001_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0001_0002', replacement = 'objetivos_util'), matches( '\\b(q0003_0001_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0009_0001', replacement = 'oport_pedag_satisf'), matches( '\\b(q0009_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0009_0002', replacement = 'oport_profesional_satisf'), matches( '\\b(q0009_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0001', replacement = 'permanencia_satisf'), matches( '\\b(q0013_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0021', replacement = 'princ_eticos_conoce'), matches( '\\b(q0021)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0001_0002', replacement = 'promo_eventos_ext'), matches( '\\b(q0020_0001_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0001_0001', replacement = 'promo_eventos_pucp'), matches( '\\b(q0020_0001_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0015_0001', replacement = 'promocion_docente_satisf'), matches( '\\b(q0015_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'publico', replacement = 'publico'), matches( '\\b(publico)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0022_0001', replacement = 'relacion_internacional_satisf'), matches( '\\b(q0022_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'respondent_id', replacement = 'respondent_id'), matches( '\\b(respondent_id)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0002_0002', replacement = 'sag_accesible'), matches( '\\b(q0016_0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0002_0003', replacement = 'sag_util'), matches( '\\b(q0016_0002_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0002_0001', replacement = 'sag_utilizado'), matches( '\\b(q0016_0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0002_0001', replacement = 'salud_conoce'), matches( '\\b(q0019_0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0002_0003', replacement = 'salud_util'), matches( '\\b(q0019_0002_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0002_0002', replacement = 'salud_utilizado'), matches( '\\b(q0019_0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0003', replacement = 'servicios_prest_satisf'), matches( '\\b(q0018_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0002_0003', replacement = 'valores_univ'), matches( '\\b(q0002_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0002_0002', replacement = 'vision_univ'), matches( '\\b(q0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0017_0003', replacement = 'zoom_satisf'), matches( '\\b(q0017_0003)\\b')) %>% 
+  mutate(
+ across(aclaracion, ~set_label(., label = 'Hecha esta aclaración, ¿desea continuar con la encuesta?')), 
+ across(actualiza_libros_satisf, ~set_label(., label = 'La actualización de los recursos (bases de datos, e-books, revistas electrónicas, libros y revistas impresas, guías temáticas, repositorios, etc.) con información vigente para mi especialidad')), 
+ across(atencion_padmin_satisf, ~set_label(., label = 'La atención que brinda el personal administrativo PUCP (durante los trámites administrativos y académicos)')), 
+ across(biblio_investiga_ext, ~set_label(., label = '¿Las bibliotecas y/o centros de información brindan acceso a investigaciones actualizadas (recientes)…(no incluir tesis de estudiantes pregrado y posgrado)… - ...producidas por investigadores externos?')), 
+ across(biblio_investiga_pucp, ~set_label(., label = '¿Las bibliotecas y/o centros de información brindan acceso a investigaciones actualizadas (recientes)…(no incluir tesis de estudiantes pregrado y posgrado)… - ...producidas por investigadores de la PUCP?')), 
+ across(bibliopucp_satisf, ~set_label(., label = 'El acceso a los recursos (catálogo en línea, bases de datos, e-books, revistas electrónicas, libros y revistas impresas, guías temáticas, repositorios, tutoriales, podcast, etc.) de las bibliotecas PUCP')), 
+ across(campus_virtual_satisf, ~set_label(., label = 'Nivel de satisfacción respecto al campus virtual')), 
+ across(canvas_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a CANVAS')), 
+ across(centuria_accesible, ~set_label(., label = 'CENTURIA - ¿Es accesible?')), 
+ across(centuria_util, ~set_label(., label = 'CENTURIA - ¿Es útil?')), 
+ across(centuria_utilizado, ~set_label(., label = 'CENTURIA - ¿Lo ha utilizado?')), 
+ across(cisam_accesible, ~set_label(., label = 'CISAM - ¿Es accesible?')), 
+ across(cisam_util, ~set_label(., label = 'CISAM - ¿Es útil?')), 
+ across(cisam_utilizado, ~set_label(., label = 'CISAM - ¿Lo ha utilizado?')), 
+ across(collector_id, ~set_label(., label = 'collector_id')), 
+ across(collector_nm, ~set_label(., label = 'CollectorNm')), 
+ across(comunica_inst_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la comunicación institucional PUCP')), 
+ across(conectividad_accede, ~set_label(., label = 'Sobre los recursos de apoyo a la formación brindados por la PUCP durante la pandemia:¿Accedió a conexión a internet del Fondo de Conectividad PUCP?')), 
+ across(conectividad_satisf, ~set_label(., label = 'En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique cuál es su nivel de satisfacción con la conexión a internet del fondo de conectividad PUCP:')), 
+ across(conoce_ingr_docencia, ~set_label(., label = 'Sobre los procesos de ingreso, permanencia y promoción docente: ¿Conoce el proceso de ingreso a la docencia?')), 
+ across(conoce_permanencia, ~set_label(., label = '¿Conoce el proceso de permanencia?')), 
+ across(conoce_promocion, ~set_label(., label = '¿Conoce el proceso de promoción docente?')), 
+ across(custom_1, ~set_label(., label = 'custom_1')), 
+ across(cvpucp_accesible, ~set_label(., label = 'CVPUCP - ¿Es accesible?')), 
+ across(cvpucp_util, ~set_label(., label = 'CVPUCP - ¿Es útil?')), 
+ across(cvpucp_utilizado, ~set_label(., label = 'CVPUCP - ¿Lo ha utilizado?')), 
+ across(date_created, ~set_label(., label = 'date_created')), 
+ across(date_modified, ~set_label(., label = 'date_modified')), 
+ across(deporte_conoce, ~set_label(., label = 'Servicio de actividad física y deportes - ¿Lo conoce?')), 
+ across(deporte_util, ~set_label(., label = 'Servicio de actividad física y deporte - ¿Le fue útil?')), 
+ across(deporte_utilizado, ~set_label(., label = 'Servicio de actividad física y deportes - ¿Lo ha utilizado?')), 
+ across(docencia_rec_edu, ~set_label(., label = '…recursos educacionales (colección bibliográfica, bases de datos bibliográficas, herramientas informáticas, materiales para los cursos, etc.) en la universidad o su programa/unidad permiten llevar a cabo las funciones de docencia sin dificultad?')), 
+ across(docencia_rec_finan, ~set_label(., label = '…recursos financieros en la universidad o su programa/unidad permiten llevar a cabo las funciones de docencia sin dificultad?')), 
+ across(docencia_rec_fisic, ~set_label(., label = '…recursos físicos (infraestructura, instalaciones y equipamiento) en la universidad o en su programa/unidad permiten llevar a cabo las funciones de docencia sin dificultad?')), 
+ across(docencia_rec_hum, ~set_label(., label = '…recursos humanos (profesores y personal administrativo) en la universidad o en su programa/unidad permiten llevar a cabo las funciones de docencia sin dificultad?')), 
+ across(email_address, ~set_label(., label = 'email_address')), 
+ across(equipamiento_satisf, ~set_label(., label = 'En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique cuál es su nivel de satisfacción con los equipos informáticos de la PUCP:')), 
+ across(equipoinf_accede, ~set_label(., label = '¿Accedió a equipos informáticos de la PUCP?')), 
+ across(first_name, ~set_label(., label = 'first_name')), 
+ across(gestion_padmin_satisf, ~set_label(., label = 'La gestión de los procesos académico-administrativos (matrícula, registro de notas, emisión de constancias y diplomas, información personal, entre otros)')), 
+ across(id, ~set_label(., label = 'id')), 
+ across(info_internacional_satisf, ~set_label(., label = 'La comunicación de la PUCP a los docentes sobre los mecanismos para hacer uso de los beneficios de internacionalización (estancias de docencia o de investigación, participación en eventos académicos, etc.)')), 
+ across(ingreso_docencia_satisf, ~set_label(., label = 'En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique cuál es su nivel de satisfacción con el proceso de ingreso a la docencia:')), 
+ across(investiga_rec_edu, ~set_label(., label = '…recursos educacionales (colección bibliográfica, bases de datos bibliográficas, herramientas informáticas, materiales para los cursos, etc.) en la universidad o su programa/unidad permiten llevar a cabo las funciones de investigación sin dificultad?')), 
+ across(investiga_rec_finan, ~set_label(., label = '…recursos financieros en la universidad o su programa/unidad permiten llevar a cabo las funciones de investigación sin dificultad?')), 
+ across(investiga_rec_fisic, ~set_label(., label = '…recursos físicos (infraestructura, instalaciones y equipamiento) en la universidad o su programa/unidad permiten llevar a cabo las funciones de investigación sin dificultad?')), 
+ across(investiga_rec_hum, ~set_label(., label = '…recursos humanos (profesores y personal administrativo) en la universidad o su programa/unidad permiten llevar a cabo las funciones de investigación sin dificultad?')), 
+ across(ip_address, ~set_label(., label = 'ip_address')), 
+ across(last_name, ~set_label(., label = 'last_name')), 
+ across(mision_univ, ~set_label(., label = '...la misión de la universidad?')), 
+ across(normas_accesible, ~set_label(., label = '¿Consideras que la información que brinda la universidad sobre las normas y los reglamentos institucionales es… - … accesible?')), 
+ across(normas_util, ~set_label(., label = '¿Consideras que la información que brinda la universidad sobre las normas y los reglamentos institucionales es… - … útil?')), 
+ across(objetivos_accesible, ~set_label(., label = '¿Consideras que la información que brinda la universidad sobre los objetivos es… - … accesible?')), 
+ across(objetivos_util, ~set_label(., label = '¿Consideras que la información que brinda la universidad sobre los objetivos es… - … útil?')), 
+ across(oport_pedag_satisf, ~set_label(., label = 'Las oportunidades de actualización pedagógica que ofrece la PUCP')), 
+ across(oport_profesional_satisf, ~set_label(., label = 'Las oportunidades de actualización profesional y disciplinaria que ofrece la PUCP')), 
+ across(permanencia_satisf, ~set_label(., label = 'En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique cuál es su nivel de satisfacción con el proceso de permanencia:')), 
+ across(princ_eticos_conoce, ~set_label(., label = 'Sobre los principios éticos en la investigación, ¿Conoce los principios éticos que guían la investigación en la PUCP?')), 
+ across(promo_eventos_ext, ~set_label(., label = '¿La PUCP promueve eventos académicos (conversatorios, seminarios, coloquios, talleres, etc.) donde se presentan investigaciones recientes o de mi especialidad… - ...producidas por investigadores externos?')), 
+ across(promo_eventos_pucp, ~set_label(., label = '¿La universidad promueve eventos académicos (conversatorios, seminarios, coloquios, talleres, etc.) donde se presentan investigaciones recientes o de mi especialidad… - ...producidas por investigadores de la universidad?')), 
+ across(promocion_docente_satisf, ~set_label(., label = 'En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique cuál es su nivel de satisfacción con el proceso de promoción docente:')), 
+ across(publico, ~set_label(., label = 'Público objetivo')), 
+ across(relacion_internacional_satisf, ~set_label(., label = 'La relación que la PUCP establece con universidades e instituciones en el extranjero (convenios, eventos académicos, intercambio docente, etc.)')), 
+ across(respondent_id, ~set_label(., label = 'respondent_id')), 
+ across(sag_accesible, ~set_label(., label = 'SAG - ¿Es accesible?')), 
+ across(sag_util, ~set_label(., label = 'SAG - ¿Es útil?')), 
+ across(sag_utilizado, ~set_label(., label = 'SAG - ¿Lo ha utilizado?')), 
+ across(salud_conoce, ~set_label(., label = 'Servicio de Salud - ¿Lo conoce?')), 
+ across(salud_util, ~set_label(., label = 'Servicio de Salud - ¿Le fue útil?')), 
+ across(salud_utilizado, ~set_label(., label = 'Servicio de Salud - ¿Lo ha utilizado?')), 
+ across(servicios_prest_satisf, ~set_label(., label = 'Los servicios prestados por las bibliotecas o centros de información(asesorías, atención a personas con discapacidad visual, digitalización, préstamo a pedido, provisión de documentos, publicaciones para la docencia)')), 
+ across(valores_univ, ~set_label(., label = '...los valores institucionales de la universidad?')), 
+ across(vision_univ, ~set_label(., label = '...la visión  de la universidad?')), 
+ across(zoom_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la Plataforma de videoconferencias ZOOM')), 
+  )
+```
+
+# Egresados posgrado
+
+```{r}
+#| label: limpieza profunda egresados posgrado1
+
+egre_pos3<-
+  egre_pos2 %>% 
+  rename_with( ~ str_replace(.x, pattern = 'q0001', replacement = 'aclaracion'), matches( '\\b(q0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0015_0002', replacement = 'actualiza_libros_satisf'), matches( '\\b(q0015_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0010_0001', replacement = 'aprec_prog'), matches( '\\b(q0010_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0001_0001', replacement = 'becas_conoce'), matches( '\\b(q0016_0001_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0001_0003', replacement = 'becas_util'), matches( '\\b(q0016_0001_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0001_0002', replacement = 'becas_utilizado'), matches( '\\b(q0016_0001_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0017_0003_0002', replacement = 'biblio_investiga_ext'), matches( '\\b(q0017_0003_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0017_0003_0001', replacement = 'biblio_investiga_pucp'), matches( '\\b(q0017_0003_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0015_0001', replacement = 'bibliopucp_satisf'), matches( '\\b(q0015_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'collector_id', replacement = 'collector_id'), matches( '\\b(collector_id)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'collector_nm', replacement = 'collector_nm'), matches( '\\b(collector_nm)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0001', replacement = 'comunica_inst_satisf'), matches( '\\b(q0013_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0012_0002_0001', replacement = 'cursos_accesible'), matches( '\\b(q0012_0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0012_0002_0002', replacement = 'cursos_util'), matches( '\\b(q0012_0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'custom_1', replacement = 'custom_1'), matches( '\\b(custom_1)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'date_created', replacement = 'date_created'), matches( '\\b(date_created)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'date_modified', replacement = 'date_modified'), matches( '\\b(date_modified)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'email_address', replacement = 'email_address'), matches( '\\b(email_address)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0003_0001', replacement = 'empleabilidad_conoce'), matches( '\\b(q0016_0003_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0003_0003', replacement = 'empleabilidad_util'), matches( '\\b(q0016_0003_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0003_0002', replacement = 'empleabilidad_utilizado'), matches( '\\b(q0016_0003_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0003', replacement = 'fac_eco_internacional_satisf'), matches( '\\b(q0020_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'first_name', replacement = 'first_name'), matches( '\\b(first_name)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0014_0001', replacement = 'gestion_padmin_satisf'), matches( '\\b(q0014_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0012_0003_0001', replacement = 'grado_accesible'), matches( '\\b(q0012_0003_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0012_0003_0002', replacement = 'grado_util'), matches( '\\b(q0012_0003_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0021', replacement = 'id'), matches( '\\b(q0021)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0002', replacement = 'incluyo_investiga'), matches( '\\b(q0019_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0001', replacement = 'incluyo_rsu'), matches( '\\b(q0019_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0009_0003', replacement = 'incremento_ingresos'), matches( '\\b(q0009_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0008', replacement = 'ingreso_mensual'), matches( '\\b(q0008)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003', replacement = 'ingreso_year'), matches( '\\b(q0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_other', replacement = 'ingreso_year_otro'), matches( '\\b(q0003_other)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0004', replacement = 'internacional_satisf'), matches( '\\b(q0020_0004)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'ip_address', replacement = 'ip_address'), matches( '\\b(ip_address)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'last_name', replacement = 'last_name'), matches( '\\b(last_name)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0011_0001', replacement = 'mision_univ'), matches( '\\b(q0011_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0009_0002', replacement = 'nuevas_funciones'), matches( '\\b(q0009_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0009_0001', replacement = 'nuevos_conoc'), matches( '\\b(q0009_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0004', replacement = 'obtencion_grado'), matches( '\\b(q0004)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0001', replacement = 'oport_internacional_satisf'), matches( '\\b(q0020_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0007', replacement = 'org_trabaja'), matches( '\\b(q0007)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0007_other', replacement = 'org_trabaja_otro'), matches( '\\b(q0007_other)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0002', replacement = 'origen_egresado'), matches( '\\b(q0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0012_0001_0001', replacement = 'perfil_accesible'), matches( '\\b(q0012_0001_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0012_0001_0002', replacement = 'perfil_util'), matches( '\\b(q0012_0001_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018', replacement = 'princ_eticos_conoce'), matches( '\\b(q0018)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0017_0001_0002', replacement = 'prof_investiga_ext'), matches( '\\b(q0017_0001_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0017_0001_0001', replacement = 'prof_investiga_pucp'), matches( '\\b(q0017_0001_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0017_0002_0002', replacement = 'promo_eventos_ext'), matches( '\\b(q0017_0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0017_0002_0001', replacement = 'promo_eventos_pucp'), matches( '\\b(q0017_0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'publico', replacement = 'publico'), matches( '\\b(publico)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020_0002', replacement = 'req_acad_internacional_satisf'), matches( '\\b(q0020_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'respondent_id', replacement = 'respondent_id'), matches( '\\b(respondent_id)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0015_0003', replacement = 'servicios_prest_satisf'), matches( '\\b(q0015_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0002_0001', replacement = 'socio_econ_conoce'), matches( '\\b(q0016_0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0002_0003', replacement = 'socio_econ_util'), matches( '\\b(q0016_0002_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0002_0002', replacement = 'socio_econ_utilizado'), matches( '\\b(q0016_0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0005', replacement = 'trabaja_actual'), matches( '\\b(q0005)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0006', replacement = 'trabajo_relacionado'), matches( '\\b(q0006)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0011_0003', replacement = 'valores_univ'), matches( '\\b(q0011_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0011_0002', replacement = 'vision_univ'), matches( '\\b(q0011_0002)\\b')) %>% 
+  mutate(
+ across(aclaracion, ~set_label(., label = 'Hecha esta aclaración, ¿desea continuar con la encuesta?')), 
+ across(actualiza_libros_satisf, ~set_label(., label = 'La actualización de los recursos (bases de datos, e-books, revistas electrónicas, libros y revistas impresas, guías temáticas, repositorios, etc.) con información vigente para mi especialidad')), 
+ across(aprec_prog, ~set_label(., label = '¿Cuál es su apreciación general del programa cursado?')), 
+ across(becas_conoce, ~set_label(., label = 'Becas - ¿Lo conoce?')), 
+ across(becas_util, ~set_label(., label = 'Becas - ¿Le fue útil?')), 
+ across(becas_utilizado, ~set_label(., label = 'Becas - ¿Lo ha utilizado?')), 
+ across(biblio_investiga_ext, ~set_label(., label = '¿Las bibliotecas y/o centros de información brindan acceso a investigaciones actualizadas (recientes)…(no incluir tesis de estudiantes pregrado y posgrado)… - ...producidas por investigadores externos?')), 
+ across(biblio_investiga_pucp, ~set_label(., label = '¿Las bibliotecas y/o centros de información brindan acceso a investigaciones actualizadas (recientes)…(no incluir tesis de estudiantes pregrado y posgrado)… - ...producidas por investigadores de la PUCP?')), 
+ across(bibliopucp_satisf, ~set_label(., label = 'El acceso a los recursos (catálogo en línea, bases de datos, e-books, revistas electrónicas, libros y revistas impresas, guías temáticas, repositorios, tutoriales, podcast, etc.) de las bibliotecas PUCP')), 
+ across(collector_id, ~set_label(., label = 'collector_id')), 
+ across(collector_nm, ~set_label(., label = 'CollectorNm')), 
+ across(comunica_inst_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la comunicación institucional PUCP')), 
+ across(cursos_accesible, ~set_label(., label = '...los planes de estudios y cursos… - ¿Es accesible?')), 
+ across(cursos_util, ~set_label(., label = '...los planes de estudios y cursos… - ¿Es útil?')), 
+ across(custom_1, ~set_label(., label = 'custom_1')), 
+ across(date_created, ~set_label(., label = 'date_created')), 
+ across(date_modified, ~set_label(., label = 'date_modified')), 
+ across(email_address, ~set_label(., label = 'email_address')), 
+ across(empleabilidad_conoce, ~set_label(., label = 'Empleabilidad - ¿Lo conoce?')), 
+ across(empleabilidad_util, ~set_label(., label = 'Empleabilidad - ¿Le fue útil?')), 
+ across(empleabilidad_utilizado, ~set_label(., label = 'Empleabilidad - ¿Lo ha utilizado?')), 
+ across(fac_eco_internacional_satisf, ~set_label(., label = 'Las facilidades económicas para acceder a las oportunidades de internacionalización')), 
+ across(first_name, ~set_label(., label = 'first_name')), 
+ across(gestion_padmin_satisf, ~set_label(., label = 'La gestión de los procesos académico-administrativos (matrícula, registro de notas, emisión de constancias y diplomas, información personal, entre otros)')), 
+ across(grado_accesible, ~set_label(., label = '...la obtención del grado y/o título profesional… - ¿Es accesible?')), 
+ across(grado_util, ~set_label(., label = '...la obtención del grado y/o título profesional… - ¿Es útil?')), 
+ across(id, ~set_label(., label = 'id')), 
+ across(incluyo_investiga, ~set_label(., label = '¿Considera que el plan de estudios incluyó actividades orientadas a la investigación?')), 
+ across(incluyo_rsu, ~set_label(., label = '¿Considera que el plan de estudios incluyó actividades orientadas a la responsabilidad social universitaria?')), 
+ across(incremento_ingresos, ~set_label(., label = 'Incrementar mis ingresos')), 
+ across(ingreso_mensual, ~set_label(., label = '¿Cuál es su ingreso mensual bruto?')), 
+ across(ingreso_year, ~set_label(., label = 'Año que ingresó al programa')), 
+ across(ingreso_year_otro, ~set_label(., label = 'Año que ingresó al programa - Otro (especifique)')), 
+ across(internacional_satisf, ~set_label(., label = 'En general, ¿qué tan satisfecho se encuentra con las oportunidades de internacionalización ofrecidas?')), 
+ across(ip_address, ~set_label(., label = 'ip_address')), 
+ across(last_name, ~set_label(., label = 'last_name')), 
+ across(mision_univ, ~set_label(., label = '...la misión de la universidad?')), 
+ across(nuevas_funciones, ~set_label(., label = 'Desempeñar nuevas funciones y responsabilidades')), 
+ across(nuevos_conoc, ~set_label(., label = 'Adquirir nuevos conocimientos y competencias')), 
+ across(obtencion_grado, ~set_label(., label = 'Obtuvo el grado:')), 
+ across(oport_internacional_satisf, ~set_label(., label = 'Las oportunidades de internacionalización que se ofrecen (intercambios, pasantías, estancias, programas de doble titulación, cursos a cargo de profesores internacionales)')), 
+ across(org_trabaja, ~set_label(., label = '¿Cuál es el tipo de organización en la que trabaja?')), 
+ across(org_trabaja_otro, ~set_label(., label = '¿Cuál es el tipo de organización en la que trabaja? - Otros (especifique)')), 
+ across(origen_egresado, ~set_label(., label = 'Es egresado de:')), 
+ across(perfil_accesible, ~set_label(., label = '...las especialidades o programas que ofrece y los perfiles de egreso… - ¿Es accesible?')), 
+ across(perfil_util, ~set_label(., label = '...las especialidades o programas que ofrece y los perfiles de egreso… - ¿Es útil?')), 
+ across(princ_eticos_conoce, ~set_label(., label = 'Sobre los principios éticos en la investigación, ¿Conoce los principios éticos que guían la investigación en la PUCP?')), 
+ across(prof_investiga_ext, ~set_label(., label = '¿Los profesores, en mis cursos, promueven que consulte investigaciones recientes… - ...producidas por investigadores externos?')), 
+ across(prof_investiga_pucp, ~set_label(., label = '¿Los profesores, en mis cursos, promueven que consulte investigaciones recientes… - ...producidas por investigadores de la PUCP?')), 
+ across(promo_eventos_ext, ~set_label(., label = '¿La PUCP promueve eventos académicos (conversatorios, seminarios, coloquios, talleres, etc.) donde se presentan investigaciones recientes o de mi especialidad… - ...producidas por investigadores externos?')), 
+ across(promo_eventos_pucp, ~set_label(., label = '¿La universidad promueve eventos académicos (conversatorios, seminarios, coloquios, talleres, etc.) donde se presentan investigaciones recientes o de mi especialidad… - ...producidas por investigadores de la universidad?')), 
+ across(publico, ~set_label(., label = 'Público objetivo')), 
+ across(req_acad_internacional_satisf, ~set_label(., label = 'Los requisitos académicos para acceder a las oportunidades de internacionalización')), 
+ across(respondent_id, ~set_label(., label = 'respondent_id')), 
+ across(servicios_prest_satisf, ~set_label(., label = 'Los servicios prestados por las bibliotecas o centros de información(asesorías, atención a personas con discapacidad visual, digitalización, préstamo a pedido, provisión de documentos, publicaciones para la docencia)')), 
+ across(socio_econ_conoce, ~set_label(., label = 'Atención socio- económica - ¿Lo conoce?')), 
+ across(socio_econ_util, ~set_label(., label = 'Atención socio- económica - ¿Le fue útil?')), 
+ across(socio_econ_utilizado, ~set_label(., label = 'Atención socio- económica - ¿Lo ha utilizado?')), 
+ across(trabaja_actual, ~set_label(., label = 'Actualmente, ¿está usted trabajando? (considere por trabajo cualquier actividad remunerada de por lo menos medio tiempo de dedicación)')), 
+ across(trabajo_relacionado, ~set_label(., label = 'Dicho trabajo, ¿se encuentra relacionado con la formación recibida en el programa?')), 
+ across(valores_univ, ~set_label(., label = '...los valores institucionales de la universidad?')), 
+ across(vision_univ, ~set_label(., label = '...la visión  de la universidad?')), 
+  )
+```
+
+# Egresados CENTRUM
+
+```{r}
+#| label: limpieza profunda egresados centrum1
+
+egre_centrum3<-
+  egre_centrum2 %>% 
+  rename_with( ~ str_replace(.x, pattern = 'q0001', replacement = 'aclaracion'), matches( '\\b(q0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0003_0001', replacement = 'act_profesional_conoce'), matches( '\\b(q0018_0003_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0003_0003', replacement = 'act_profesional_util'), matches( '\\b(q0018_0003_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0003_0002', replacement = 'act_profesional_utilizado'), matches( '\\b(q0018_0003_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0002', replacement = 'actualiza_libros_satisf'), matches( '\\b(q0016_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0010_0001', replacement = 'aprec_prog'), matches( '\\b(q0010_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0017', replacement = 'biblio_atencion'), matches( '\\b(q0017)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0003_0002', replacement = 'biblio_investiga_ext'), matches( '\\b(q0019_0003_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0003_0001', replacement = 'biblio_investiga_pucp'), matches( '\\b(q0019_0003_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0001', replacement = 'bibliopucp_satisf'), matches( '\\b(q0016_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0005_0001', replacement = 'charla_empleo_conoce'), matches( '\\b(q0018_0005_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0005_0003', replacement = 'charla_empleo_util'), matches( '\\b(q0018_0005_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0005_0002', replacement = 'charla_empleo_utilizado'), matches( '\\b(q0018_0005_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'collector_id', replacement = 'collector_id'), matches( '\\b(collector_id)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'collector_nm', replacement = 'collector_nm'), matches( '\\b(collector_nm)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0001', replacement = 'comunica_inst_satisf'), matches( '\\b(q0013_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0012_0002_0001', replacement = 'cursos_accesible'), matches( '\\b(q0012_0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0012_0002_0002', replacement = 'cursos_util'), matches( '\\b(q0012_0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'custom_1', replacement = 'custom_1'), matches( '\\b(custom_1)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'date_created', replacement = 'date_created'), matches( '\\b(date_created)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'date_modified', replacement = 'date_modified'), matches( '\\b(date_modified)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0002_0001', replacement = 'developme_conoce'), matches( '\\b(q0018_0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0002_0003', replacement = 'developme_util'), matches( '\\b(q0018_0002_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0002_0002', replacement = 'developme_utilizado'), matches( '\\b(q0018_0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0015_0002', replacement = 'disponible_datos'), matches( '\\b(q0015_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0015_0001', replacement = 'disponible_libros'), matches( '\\b(q0015_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'email_address', replacement = 'email_address'), matches( '\\b(email_address)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0004_0001', replacement = 'empleabilidad_conoce'), matches( '\\b(q0018_0004_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0004_0003', replacement = 'empleabilidad_util'), matches( '\\b(q0018_0004_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0004_0002', replacement = 'empleabilidad_utilizado'), matches( '\\b(q0018_0004_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'first_name', replacement = 'first_name'), matches( '\\b(first_name)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0014_0001', replacement = 'gestion_padmin_satisf'), matches( '\\b(q0014_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0012_0003_0001', replacement = 'grado_accesible'), matches( '\\b(q0012_0003_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0012_0003_0002', replacement = 'grado_util'), matches( '\\b(q0012_0003_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0023', replacement = 'id'), matches( '\\b(q0023)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0021_0002', replacement = 'incluyo_investiga'), matches( '\\b(q0021_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0021_0001', replacement = 'incluyo_rsu'), matches( '\\b(q0021_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0009_0003', replacement = 'incremento_ingresos'), matches( '\\b(q0009_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0008', replacement = 'ingreso_mensual'), matches( '\\b(q0008)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003', replacement = 'ingreso_year'), matches( '\\b(q0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_other', replacement = 'ingreso_year_otro'), matches( '\\b(q0003_other)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0022_0003', replacement = 'internacional_satisf'), matches( '\\b(q0022_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'ip_address', replacement = 'ip_address'), matches( '\\b(ip_address)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'last_name', replacement = 'last_name'), matches( '\\b(last_name)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0011_0001', replacement = 'mision_univ'), matches( '\\b(q0011_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0009_0002', replacement = 'nuevas_funciones'), matches( '\\b(q0009_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0009_0001', replacement = 'nuevos_conoc'), matches( '\\b(q0009_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0004', replacement = 'obtencion_grado'), matches( '\\b(q0004)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0022_0001', replacement = 'oport_internacional_satisf'), matches( '\\b(q0022_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0001_0001', replacement = 'optimiza_cv_conoce'), matches( '\\b(q0018_0001_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0001_0003', replacement = 'optimiza_cv_util'), matches( '\\b(q0018_0001_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0018_0001_0002', replacement = 'optimiza_cv_utilizado'), matches( '\\b(q0018_0001_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0007', replacement = 'org_trabaja'), matches( '\\b(q0007)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0007_other', replacement = 'org_trabaja_otro'), matches( '\\b(q0007_other)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0002', replacement = 'origen_egresado'), matches( '\\b(q0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0012_0001_0001', replacement = 'perfil_accesible'), matches( '\\b(q0012_0001_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0012_0001_0002', replacement = 'perfil_util'), matches( '\\b(q0012_0001_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0020', replacement = 'princ_eticos_conoce'), matches( '\\b(q0020)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0001_0002', replacement = 'prof_investiga_ext'), matches( '\\b(q0019_0001_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0001_0001', replacement = 'prof_investiga_pucp'), matches( '\\b(q0019_0001_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0002_0002', replacement = 'promo_eventos_ext'), matches( '\\b(q0019_0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0019_0002_0001', replacement = 'promo_eventos_pucp'), matches( '\\b(q0019_0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'publico', replacement = 'publico'), matches( '\\b(publico)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0022_0002', replacement = 'req_acad_internacional_satisf'), matches( '\\b(q0022_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'respondent_id', replacement = 'respondent_id'), matches( '\\b(respondent_id)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016_0003', replacement = 'servicios_prest_satisf'), matches( '\\b(q0016_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0005', replacement = 'trabaja_actual'), matches( '\\b(q0005)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0006', replacement = 'trabajo_relacionado'), matches( '\\b(q0006)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0011_0003', replacement = 'valores_univ'), matches( '\\b(q0011_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0011_0002', replacement = 'vision_univ'), matches( '\\b(q0011_0002)\\b')) %>% 
+  mutate(
+  across(aclaracion, ~set_label(., label = 'Hecha esta aclaración, ¿desea continuar con la encuesta?')), 
+ across(act_profesional_conoce, ~set_label(., label = 'Actividades para potenciar el perfil profesional: talleres, cursos online, charlas y seminarios webs para potenciar la empleabilidad. - ¿Lo conoce?')), 
+ across(act_profesional_util, ~set_label(., label = 'Actividades para potenciar el perfil profesional: talleres, cursos online, charlas y seminarios webs para potenciar la empleabilidad. - ¿Le fue útil?')), 
+ across(act_profesional_utilizado, ~set_label(., label = 'Actividades para potenciar el perfil profesional: talleres, cursos online, charlas y seminarios webs para potenciar la empleabilidad. - ¿Lo ha utilizado?')), 
+ across(actualiza_libros_satisf, ~set_label(., label = 'La actualización de los recursos (bases de datos, e-books, revistas electrónicas, libros y revistas impresas, guías temáticas, repositorios, etc.) con información vigente para mi especialidad')), 
+ across(aprec_prog, ~set_label(., label = '¿Cuál es su apreciación general del programa cursado?')), 
+ across(biblio_atencion, ~set_label(., label = 'En general, considera que las bibliotecas y/o centro de información y referencia atendieron a sus necesidades como estudiante')), 
+ across(biblio_investiga_ext, ~set_label(., label = '¿Las bibliotecas y/o centros de información brindan acceso a investigaciones actualizadas (recientes)…(no incluir tesis de estudiantes pregrado y posgrado)… - ...producidas por investigadores externos?')), 
+ across(biblio_investiga_pucp, ~set_label(., label = '¿Las bibliotecas y/o centros de información brindan acceso a investigaciones actualizadas (recientes)…(no incluir tesis de estudiantes pregrado y posgrado)… - ...producidas por investigadores de la PUCP?')), 
+ across(bibliopucp_satisf, ~set_label(., label = 'El acceso a los recursos (catálogo en línea, bases de datos, e-books, revistas electrónicas, libros y revistas impresas, guías temáticas, repositorios, tutoriales, podcast, etc.) de las bibliotecas PUCP')), 
+ across(charla_empleo_conoce, ~set_label(., label = 'Comunicaciones: información necesaria para acceder a las plataformas de empleo, eventos y cursos online vía correo electrónico. - ¿Lo conoce?')), 
+ across(charla_empleo_util, ~set_label(., label = 'Comunicaciones: información necesaria para acceder a las plataformas de empleo, eventos y cursos online vía correo electrónico. - ¿Le fue útil?')), 
+ across(charla_empleo_utilizado, ~set_label(., label = 'Comunicaciones: información necesaria para acceder a las plataformas de empleo, eventos y cursos online vía correo electrónico. - ¿Lo ha utilizado?')), 
+ across(collector_id, ~set_label(., label = 'collector_id')), 
+ across(collector_nm, ~set_label(., label = 'CollectorNm')), 
+ across(comunica_inst_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la comunicación institucional PUCP')), 
+ across(cursos_accesible, ~set_label(., label = '...los planes de estudios y cursos… - ¿Es accesible?')), 
+ across(cursos_util, ~set_label(., label = '...los planes de estudios y cursos… - ¿Es útil?')), 
+ across(custom_1, ~set_label(., label = 'custom_1')), 
+ across(date_created, ~set_label(., label = 'date_created')), 
+ across(date_modified, ~set_label(., label = 'date_modified')), 
+ across(developme_conoce, ~set_label(., label = 'Acceso a la herramienta DevelopMe™ - ¿Lo conoce?')), 
+ across(developme_util, ~set_label(., label = 'Acceso a la herramienta DevelopMe™ - ¿Le fue útil?')), 
+ across(developme_utilizado, ~set_label(., label = 'Acceso a la herramienta DevelopMe™ - ¿Lo ha utilizado?')), 
+ across(disponible_datos, ~set_label(., label = 'Disponibilidad de bases de datos relevantes para mi programa de estudios')), 
+ across(disponible_libros, ~set_label(., label = 'Disponibilidad de libros relevantes para mi programa de estudios')), 
+ across(email_address, ~set_label(., label = 'email_address')), 
+ across(empleabilidad_conoce, ~set_label(., label = 'Empleabilidad - ¿Lo conoce?')), 
+ across(empleabilidad_util, ~set_label(., label = 'Empleabilidad - ¿Le fue útil?')), 
+ across(empleabilidad_utilizado, ~set_label(., label = 'Empleabilidad - ¿Lo ha utilizado?')), 
+ across(first_name, ~set_label(., label = 'first_name')), 
+ across(gestion_padmin_satisf, ~set_label(., label = 'La gestión de los procesos académico-administrativos (matrícula, registro de notas, emisión de constancias y diplomas, información personal, entre otros)')), 
+ across(grado_accesible, ~set_label(., label = '...la obtención del grado y/o título profesional… - ¿Es accesible?')), 
+ across(grado_util, ~set_label(., label = '...la obtención del grado y/o título profesional… - ¿Es útil?')), 
+ across(id, ~set_label(., label = 'id')), 
+ across(incluyo_investiga, ~set_label(., label = '¿Considera que el plan de estudios incluyó actividades orientadas a la investigación?')), 
+ across(incluyo_rsu, ~set_label(., label = '¿Considera que el plan de estudios incluyó actividades orientadas a la responsabilidad social universitaria?')), 
+ across(incremento_ingresos, ~set_label(., label = 'Incrementar mis ingresos')), 
+ across(ingreso_mensual, ~set_label(., label = '¿Cuál es su ingreso mensual bruto?')), 
+ across(ingreso_year, ~set_label(., label = 'Año que ingresó al programa')), 
+ across(ingreso_year_otro, ~set_label(., label = 'Año que ingresó al programa - Otro (especifique)')), 
+ across(internacional_satisf, ~set_label(., label = 'En general, ¿qué tan satisfecho se encuentra con las oportunidades de internacionalización ofrecidas?')), 
+ across(ip_address, ~set_label(., label = 'ip_address')), 
+ across(last_name, ~set_label(., label = 'last_name')), 
+ across(mision_univ, ~set_label(., label = '...la misión de la universidad?')), 
+ across(nuevas_funciones, ~set_label(., label = 'Desempeñar nuevas funciones y responsabilidades')), 
+ across(nuevos_conoc, ~set_label(., label = 'Adquirir nuevos conocimientos y competencias')), 
+ across(obtencion_grado, ~set_label(., label = 'Obtuvo el grado:')), 
+ across(oport_internacional_satisf, ~set_label(., label = 'Las oportunidades de internacionalización que se ofrecen (intercambios, pasantías, estancias, programas de doble titulación, cursos a cargo de profesores internacionales)')), 
+ across(optimiza_cv_conoce, ~set_label(., label = 'Plan de carrera para estudiantes y graduados: para optimización de CV y perfil profesional con especialistas en reclutamiento de talento - ¿Lo conoce?')), 
+ across(optimiza_cv_util, ~set_label(., label = 'Plan de carrera para estudiantes y graduados: para optimización de CV y perfil profesional con especialistas en reclutamiento de talento - ¿Le fue útil?')), 
+ across(optimiza_cv_utilizado, ~set_label(., label = 'Plan de carrera para estudiantes y graduados: para optimización de CV y perfil profesional con especialistas en reclutamiento de talento - ¿Lo ha utilizado?')), 
+ across(org_trabaja, ~set_label(., label = '¿Cuál es el tipo de organización en la que trabaja?')), 
+ across(org_trabaja_otro, ~set_label(., label = '¿Cuál es el tipo de organización en la que trabaja? - Otros (especifique)')), 
+ across(origen_egresado, ~set_label(., label = 'Es egresado de:')), 
+ across(perfil_accesible, ~set_label(., label = '...las especialidades o programas que ofrece y los perfiles de egreso… - ¿Es accesible?')), 
+ across(perfil_util, ~set_label(., label = '...las especialidades o programas que ofrece y los perfiles de egreso… - ¿Es útil?')), 
+ across(princ_eticos_conoce, ~set_label(., label = 'Sobre los principios éticos en la investigación, ¿Conoce los principios éticos que guían la investigación en la PUCP?')), 
+ across(prof_investiga_ext, ~set_label(., label = '¿Los profesores, en mis cursos, promueven que consulte investigaciones recientes… - ...producidas por investigadores externos?')), 
+ across(prof_investiga_pucp, ~set_label(., label = '¿Los profesores, en mis cursos, promueven que consulte investigaciones recientes… - ...producidas por investigadores de la PUCP?')), 
+ across(promo_eventos_ext, ~set_label(., label = '¿La PUCP promueve eventos académicos (conversatorios, seminarios, coloquios, talleres, etc.) donde se presentan investigaciones recientes o de mi especialidad… - ...producidas por investigadores externos?')), 
+ across(promo_eventos_pucp, ~set_label(., label = '¿La universidad promueve eventos académicos (conversatorios, seminarios, coloquios, talleres, etc.) donde se presentan investigaciones recientes o de mi especialidad… - ...producidas por investigadores de la universidad?')), 
+ across(publico, ~set_label(., label = 'Público objetivo')), 
+ across(req_acad_internacional_satisf, ~set_label(., label = 'Los requisitos académicos para acceder a las oportunidades de internacionalización')), 
+ across(respondent_id, ~set_label(., label = 'respondent_id')), 
+ across(servicios_prest_satisf, ~set_label(., label = 'Los servicios prestados por las bibliotecas o centros de información(asesorías, atención a personas con discapacidad visual, digitalización, préstamo a pedido, provisión de documentos, publicaciones para la docencia)')), 
+ across(trabaja_actual, ~set_label(., label = 'Actualmente, ¿está usted trabajando? (considere por trabajo cualquier actividad remunerada de por lo menos medio tiempo de dedicación)')), 
+ across(trabajo_relacionado, ~set_label(., label = 'Dicho trabajo, ¿se encuentra relacionado con la formación recibida en el programa?')), 
+ across(valores_univ, ~set_label(., label = '...los valores institucionales de la universidad?')), 
+ across(vision_univ, ~set_label(., label = '...la visión  de la universidad?')),    
+  )
+```
+
+# Limpieza personal administrativo
+
+```{r}
+#| label: limpieza profunda admin1
+
+admin3<-
+  admin2 %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0001', replacement = 'aclaracion'), matches( '\\b(q0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0012_0002', replacement = 'apoyo_capu'), matches( '\\b(q0012_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0012_0001', replacement = 'apoyo_psico_admin'), matches( '\\b(q0012_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0006_0001', replacement = 'campus_virtual_satisf'), matches( '\\b(q0006_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0005_0001_0002', replacement = 'centuria_accesible'), matches( '\\b(q0005_0001_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0005_0001_0003', replacement = 'centuria_util'), matches( '\\b(q0005_0001_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0005_0001_0001', replacement = 'centuria_utilizado'), matches( '\\b(q0005_0001_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0012_0004', replacement = 'charlas_bienestar'), matches( '\\b(q0012_0004)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0005_0006_0002', replacement = 'cisam_accesible'), matches( '\\b(q0005_0006_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0005_0006_0003', replacement = 'cisam_util'), matches( '\\b(q0005_0006_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0005_0006_0001', replacement = 'cisam_utilizado'), matches( '\\b(q0005_0006_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'collector_id', replacement = 'collector_id'), matches( '\\b(collector_id)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'collector_nm', replacement = 'collector_nm'), matches( '\\b(collector_nm)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0004_0001', replacement = 'comunica_inst_satisf'), matches( '\\b(q0004_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0008', replacement = 'conectividad_accede'), matches( '\\b(q0008)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0009_0001', replacement = 'conectividad_satisf'), matches( '\\b(q0009_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'custom_1', replacement = 'custom_1'), matches( '\\b(custom_1)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0005_0005_0002', replacement = 'cvpucp_accesible'), matches( '\\b(q0005_0005_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0005_0005_0003', replacement = 'cvpucp_util'), matches( '\\b(q0005_0005_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0005_0005_0001', replacement = 'cvpucp_utilizado'), matches( '\\b(q0005_0005_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'date_created', replacement = 'date_created'), matches( '\\b(date_created)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'date_modified', replacement = 'date_modified'), matches( '\\b(date_modified)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0007_0001_0001', replacement = 'deporte_conoce'), matches( '\\b(q0007_0001_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0007_0001_0003', replacement = 'deporte_util'), matches( '\\b(q0007_0001_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0007_0001_0002', replacement = 'deporte_utilizado'), matches( '\\b(q0007_0001_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0002', replacement = 'dificil_boca_seca'), matches( '\\b(q0013_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0014', replacement = 'dificil_continuar'), matches( '\\b(q0013_0014)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0019', replacement = 'dificil_corazon'), matches( '\\b(q0013_0019)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0001', replacement = 'dificil_costo_relajo'), matches( '\\b(q0013_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0013', replacement = 'dificil_deprimido'), matches( '\\b(q0013_0013)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0018', replacement = 'dificil_enfado'), matches( '\\b(q0013_0018)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0016', replacement = 'dificil_entusiasmo'), matches( '\\b(q0013_0016)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0006', replacement = 'dificil_exagera'), matches( '\\b(q0013_0006)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0010', replacement = 'dificil_ilusion'), matches( '\\b(q0013_0010)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0005', replacement = 'dificil_iniciativa'), matches( '\\b(q0013_0005)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0011', replacement = 'dificil_inquieto'), matches( '\\b(q0013_0011)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0020', replacement = 'dificil_miedo'), matches( '\\b(q0013_0020)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0008', replacement = 'dificil_nervios'), matches( '\\b(q0013_0008)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0015', replacement = 'dificil_panico'), matches( '\\b(q0013_0015)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0003', replacement = 'dificil_positivo'), matches( '\\b(q0013_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0012', replacement = 'dificil_relajarse'), matches( '\\b(q0013_0012)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0004', replacement = 'dificil_respirar'), matches( '\\b(q0013_0004)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0009', replacement = 'dificil_ridiculo'), matches( '\\b(q0013_0009)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0021', replacement = 'dificil_sentido'), matches( '\\b(q0013_0021)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0007', replacement = 'dificil_tiemblo'), matches( '\\b(q0013_0007)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0013_0017', replacement = 'dificil_valor_person'), matches( '\\b(q0013_0017)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'email_address', replacement = 'email_address'), matches( '\\b(email_address)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0011_0001', replacement = 'equipamiento_satisf'), matches( '\\b(q0011_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0010', replacement = 'equipoinf_accede'), matches( '\\b(q0010)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0012_0005', replacement = 'espacios_bienestar'), matches( '\\b(q0012_0005)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0015_0008', replacement = 'estres_conectividad'), matches( '\\b(q0015_0008)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0015_0009', replacement = 'estres_docentes'), matches( '\\b(q0015_0009)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0015_0003', replacement = 'estres_elab_informe'), matches( '\\b(q0015_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0014_0001', replacement = 'estres_escala'), matches( '\\b(q0014_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0015_0005', replacement = 'estres_falta_coord'), matches( '\\b(q0015_0005)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0015_0004', replacement = 'estres_falta_plani'), matches( '\\b(q0015_0004)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0015_0007', replacement = 'estres_gestion_tiempo'), matches( '\\b(q0015_0007)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0015_0006', replacement = 'estres_labores_casa'), matches( '\\b(q0015_0006)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0015_0010', replacement = 'estres_ninguno'), matches( '\\b(q0015_0010)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0015_0011', replacement = 'estres_otro'), matches( '\\b(q0015_0011)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0015_other', replacement = 'estres_otro_especificar'), matches( '\\b(q0015_other)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0015_0002', replacement = 'estres_poca_auton'), matches( '\\b(q0015_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0015_0001', replacement = 'estres_trab_rutina'), matches( '\\b(q0015_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0006_0002', replacement = 'exa_satisf'), matches( '\\b(q0006_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0012_0007', replacement = 'falta_salud_mental'), matches( '\\b(q0012_0007)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'first_name', replacement = 'first_name'), matches( '\\b(first_name)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0016', replacement = 'id'), matches( '\\b(q0016)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'ip_address', replacement = 'ip_address'), matches( '\\b(ip_address)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'last_name', replacement = 'last_name'), matches( '\\b(last_name)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0012_0003', replacement = 'medicina_admin'), matches( '\\b(q0012_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0002_0001', replacement = 'mision_univ'), matches( '\\b(q0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0002_0001', replacement = 'normas_accesible'), matches( '\\b(q0003_0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0002_0002', replacement = 'normas_util'), matches( '\\b(q0003_0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0001_0001', replacement = 'objetivos_accesible'), matches( '\\b(q0003_0001_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0003_0001_0002', replacement = 'objetivos_util'), matches( '\\b(q0003_0001_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'publico', replacement = 'publico'), matches( '\\b(publico)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'respondent_id', replacement = 'respondent_id'), matches( '\\b(respondent_id)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0005_0002_0002', replacement = 'sag_accesible'), matches( '\\b(q0005_0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0005_0002_0003', replacement = 'sag_util'), matches( '\\b(q0005_0002_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0005_0002_0001', replacement = 'sag_utilizado'), matches( '\\b(q0005_0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0007_0002_0001', replacement = 'salud_conoce'), matches( '\\b(q0007_0002_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0007_0002_0003', replacement = 'salud_util'), matches( '\\b(q0007_0002_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0007_0002_0002', replacement = 'salud_utilizado'), matches( '\\b(q0007_0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0005_0004_0002', replacement = 'sicop_accesible'), matches( '\\b(q0005_0004_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0005_0004_0003', replacement = 'sicop_util'), matches( '\\b(q0005_0004_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0005_0004_0001', replacement = 'sicop_utilizado'), matches( '\\b(q0005_0004_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0005_0003_0002', replacement = 'sipucp_accesible'), matches( '\\b(q0005_0003_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0005_0003_0003', replacement = 'sipucp_util'), matches( '\\b(q0005_0003_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0005_0003_0001', replacement = 'sipucp_utilizado'), matches( '\\b(q0005_0003_0001)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0012_0006', replacement = 'utiliza_salud_mental'), matches( '\\b(q0012_0006)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0002_0003', replacement = 'valores_univ'), matches( '\\b(q0002_0003)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0002_0002', replacement = 'vision_univ'), matches( '\\b(q0002_0002)\\b')) %>% 
+ rename_with( ~ str_replace(.x, pattern = 'q0006_0003', replacement = 'zoom_satisf'), matches( '\\b(q0006_0003)\\b')) %>% 
+  mutate(
+ across(collector_nm, ~set_label(., label = 'CollectorNm')), 
+ across(custom_1, ~set_label(., label = 'custom_1')), 
+ across(aclaracion, ~set_label(., label = 'Hecha esta aclaración, ¿desea continuar con la encuesta?')), 
+ across(mision_univ, ~set_label(., label = '...la misión de la universidad?')), 
+ across(vision_univ, ~set_label(., label = '...la visión  de la universidad?')), 
+ across(valores_univ, ~set_label(., label = '...los valores institucionales de la universidad?')), 
+ across(objetivos_accesible, ~set_label(., label = '¿Consideras que la información que brinda la universidad sobre los objetivos es… - … accesible?')), 
+ across(objetivos_util, ~set_label(., label = '¿Consideras que la información que brinda la universidad sobre los objetivos es… - … útil?')), 
+ across(normas_accesible, ~set_label(., label = '¿Consideras que la información que brinda la universidad sobre las normas y los reglamentos institucionales es… - … accesible?')), 
+ across(normas_util, ~set_label(., label = '¿Consideras que la información que brinda la universidad sobre las normas y los reglamentos institucionales es… - … útil?')), 
+ across(comunica_inst_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la comunicación institucional PUCP')), 
+ across(respondent_id, ~set_label(., label = 'respondent_id')), 
+ across(centuria_utilizado, ~set_label(., label = 'CENTURIA - ¿Lo ha utilizado?')), 
+ across(centuria_accesible, ~set_label(., label = 'CENTURIA - ¿Es accesible?')), 
+ across(centuria_util, ~set_label(., label = 'CENTURIA - ¿Es útil?')), 
+ across(sag_utilizado, ~set_label(., label = 'SAG - ¿Lo ha utilizado?')), 
+ across(sag_accesible, ~set_label(., label = 'SAG - ¿Es accesible?')), 
+ across(sag_util, ~set_label(., label = 'SAG - ¿Es útil?')), 
+ across(sipucp_utilizado, ~set_label(., label = 'SIPUCP - ¿Lo ha utilizado?')), 
+ across(sipucp_accesible, ~set_label(., label = 'SIPUCP - ¿Es accesible?')), 
+ across(sipucp_util, ~set_label(., label = 'SIPUCP - ¿Es útil?')), 
+ across(sicop_utilizado, ~set_label(., label = 'SICOP - ¿Lo ha utilizado?')), 
+ across(collector_id, ~set_label(., label = 'collector_id')), 
+ across(sicop_accesible, ~set_label(., label = 'SICOP - ¿Es accesible?')), 
+ across(sicop_util, ~set_label(., label = 'SICOP - ¿Es útil?')), 
+ across(cvpucp_utilizado, ~set_label(., label = 'CVPUCP - ¿Lo ha utilizado?')), 
+ across(cvpucp_accesible, ~set_label(., label = 'CVPUCP - ¿Es accesible?')), 
+ across(cvpucp_util, ~set_label(., label = 'CVPUCP - ¿Es útil?')), 
+ across(cisam_utilizado, ~set_label(., label = 'CISAM - ¿Lo ha utilizado?')), 
+ across(cisam_accesible, ~set_label(., label = 'CISAM - ¿Es accesible?')), 
+ across(cisam_util, ~set_label(., label = 'CISAM - ¿Es útil?')), 
+ across(campus_virtual_satisf, ~set_label(., label = 'Nivel de satisfacción respecto al campus virtual')), 
+ across(exa_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la Plataforma EXA')), 
+ across(date_created, ~set_label(., label = 'date_created')), 
+ across(zoom_satisf, ~set_label(., label = 'Nivel de satisfacción respecto a la Plataforma de videoconferencias ZOOM')), 
+ across(deporte_conoce, ~set_label(., label = 'Servicio de actividad física y deportes - ¿Lo conoce?')), 
+ across(deporte_utilizado, ~set_label(., label = 'Servicio de actividad física y deportes - ¿Lo ha utilizado?')), 
+ across(deporte_util, ~set_label(., label = 'Servicio de actividad física y deporte - ¿Le fue útil?')), 
+ across(salud_conoce, ~set_label(., label = 'Servicio de Salud - ¿Lo conoce?')), 
+ across(salud_utilizado, ~set_label(., label = 'Servicio de Salud - ¿Lo ha utilizado?')), 
+ across(salud_util, ~set_label(., label = 'Servicio de Salud - ¿Le fue útil?')), 
+ across(conectividad_accede, ~set_label(., label = 'Sobre los recursos de apoyo a la formación brindados por la PUCP durante la pandemia:¿Accedió a conexión a internet del Fondo de Conectividad PUCP?')), 
+ across(conectividad_satisf, ~set_label(., label = 'En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique cuál es su nivel de satisfacción con la conexión a internet del fondo de conectividad PUCP:')), 
+ across(equipoinf_accede, ~set_label(., label = '¿Accedió a equipos informáticos de la PUCP?')), 
+ across(date_modified, ~set_label(., label = 'date_modified')), 
+ across(equipamiento_satisf, ~set_label(., label = 'En una escala del 1 al 5, donde 1 es «muy insatisfecho» y 5 «muy satisfecho», indique cuál es su nivel de satisfacción con los equipos informáticos de la PUCP:')), 
+ across(apoyo_psico_admin, ~set_label(., label = 'Servicio de Apoyo Psicológico para administrativos')), 
+ across(apoyo_capu, ~set_label(., label = 'Apoyo espiritual del CAPU (Centro de Asesoría Pastoral Universitaria)')), 
+ across(medicina_admin, ~set_label(., label = 'Servicio de atención médica de la universidad')), 
+ across(charlas_bienestar, ~set_label(., label = 'Charlas, webinars, talleres ofrecidos por la universidad sobre bienestar')), 
+ across(espacios_bienestar, ~set_label(., label = 'Espacios para la promoción del bienestar organizados por mi unidad')), 
+ across(utiliza_salud_mental, ~set_label(., label = '¿Usted usa las facilidades para la atención en salud mental en la universidad?')), 
+ across(falta_salud_mental, ~set_label(., label = '¿Usted considera que se requiere facilidades para la atención en salud mental en la universidad?')), 
+ across(dificil_costo_relajo, ~set_label(., label = 'Me costó mucho relajarme.')), 
+ across(dificil_boca_seca, ~set_label(., label = 'Me di cuenta de que tenía la boca seca.')), 
+ across(ip_address, ~set_label(., label = 'ip_address')), 
+ across(dificil_positivo, ~set_label(., label = 'No podía sentir ningún sentimiento positivo.')), 
+ across(dificil_respirar, ~set_label(., label = 'Se me hizo difícil respirar.')), 
+ across(dificil_iniciativa, ~set_label(., label = 'Se me hizo difícil tomar la iniciativa para hacer cosas.')), 
+ across(dificil_exagera, ~set_label(., label = 'Reaccioné exageradamente en ciertas situaciones.')), 
+ across(dificil_tiemblo, ~set_label(., label = 'Sentí que mis manos temblaban.')), 
+ across(dificil_nervios, ~set_label(., label = 'Sentí que tenía muchos nervios.')), 
+ across(dificil_ridiculo, ~set_label(., label = 'Estaba preocupado por situaciones en las cuales podía tener pánico o en las que podría hacer el ridículo.')), 
+ across(dificil_ilusion, ~set_label(., label = 'He sentido que no había nada que me ilusionara.')), 
+ across(dificil_inquieto, ~set_label(., label = 'Me he sentido inquieto.')), 
+ across(dificil_relajarse, ~set_label(., label = 'Se me hizo difícil relajarme.')), 
+ across(email_address, ~set_label(., label = 'email_address')), 
+ across(dificil_deprimido, ~set_label(., label = 'Me sentí triste y deprimido.')), 
+ across(dificil_continuar, ~set_label(., label = 'No toleré nada que no me permitiera continuar con lo que estaba haciendo.')), 
+ across(dificil_panico, ~set_label(., label = 'Sentí que estaba al punto de pánico.')), 
+ across(dificil_entusiasmo, ~set_label(., label = 'No me pude entusiasmar por nada.')), 
+ across(dificil_valor_person, ~set_label(., label = 'Sentí que valía muy poco como persona.')), 
+ across(dificil_enfado, ~set_label(., label = 'He tendido a sentirme enfadado con facilidad.')), 
+ across(dificil_corazon, ~set_label(., label = 'Sentí los latidos de mi corazón a pesar de no haber hecho ningún esfuerzo físico.')), 
+ across(dificil_miedo, ~set_label(., label = 'Tuve miedo sin razón.')), 
+ across(dificil_sentido, ~set_label(., label = 'Sentí que la vida no tenía ningún sentido.')), 
+ across(estres_escala, ~set_label(., label = 'En una escala del 1 al 10, en el que 1 es nada estresado y 10 es muy estresado, ¿Qué tan estresado te has sentido en los últimos 3 meses?')), 
+ across(first_name, ~set_label(., label = 'first_name')), 
+ across(estres_trab_rutina, ~set_label(., label = 'A continuación, se presenta una lista de posibles fuentes de estrés en el trabajo. Marque aquellas que considera que actualmente le cause mayor estrés (Puede marcar hasta tres opciones). - Trabajo rutinario')), 
+ across(estres_poca_auton, ~set_label(., label = 'A continuación, se presenta una lista de posibles fuentes de estrés en el trabajo. Marque aquellas que considera que actualmente le cause mayor estrés (Puede marcar hasta tres opciones). - Poca autonomía')), 
+ across(estres_elab_informe, ~set_label(., label = 'A continuación, se presenta una lista de posibles fuentes de estrés en el trabajo. Marque aquellas que considera que actualmente le cause mayor estrés (Puede marcar hasta tres opciones). - Elaboración de informes')), 
+ across(estres_falta_plani, ~set_label(., label = 'A continuación, se presenta una lista de posibles fuentes de estrés en el trabajo. Marque aquellas que considera que actualmente le cause mayor estrés (Puede marcar hasta tres opciones). - Falta de planificación')), 
+ across(estres_falta_coord, ~set_label(., label = 'A continuación, se presenta una lista de posibles fuentes de estrés en el trabajo. Marque aquellas que considera que actualmente le cause mayor estrés (Puede marcar hasta tres opciones). - Falta de coordinación con otras unidades')), 
+ across(estres_labores_casa, ~set_label(., label = 'A continuación, se presenta una lista de posibles fuentes de estrés en el trabajo. Marque aquellas que considera que actualmente le cause mayor estrés (Puede marcar hasta tres opciones). - Realizar las tareas laborales desde casa')), 
+ across(estres_gestion_tiempo, ~set_label(., label = 'A continuación, se presenta una lista de posibles fuentes de estrés en el trabajo. Marque aquellas que considera que actualmente le cause mayor estrés (Puede marcar hasta tres opciones). - Administrar mi tiempo de trabajo')), 
+ across(estres_conectividad, ~set_label(., label = 'A continuación, se presenta una lista de posibles fuentes de estrés en el trabajo. Marque aquellas que considera que actualmente le cause mayor estrés (Puede marcar hasta tres opciones). - Problemas de conectividad')), 
+ across(estres_docentes, ~set_label(., label = 'A continuación, se presenta una lista de posibles fuentes de estrés en el trabajo. Marque aquellas que considera que actualmente le cause mayor estrés (Puede marcar hasta tres opciones). - Docentes con malas actitudes (prepotencia)')), 
+ across(estres_ninguno, ~set_label(., label = 'A continuación, se presenta una lista de posibles fuentes de estrés en el trabajo. Marque aquellas que considera que actualmente le cause mayor estrés (Puede marcar hasta tres opciones). - No me siento estresado')), 
+ across(last_name, ~set_label(., label = 'last_name')), 
+ across(estres_otro, ~set_label(., label = 'A continuación, se presenta una lista de posibles fuentes de estrés en el trabajo. Marque aquellas que considera que actualmente le cause mayor estrés (Puede marcar hasta tres opciones). - Otros (especifique)')), 
+ across(estres_otro_especificar, ~set_label(., label = 'Other (please specify)')), 
+ across(id, ~set_label(., label = 'id')), 
+ across(publico, ~set_label(., label = 'Público objetivo')), 
+  )
+
+```
+
+# Unión de bases de datos
+
+```{r}
+#| label: diccionario final
+
+acredita_base<-
+  sjmisc::add_rows(alum_pre3, alum_pos3, alum_centrum3, 
+                    doc3, doc_centrum3, 
+                    egre_pos3, egre_centrum3, 
+                    admin3
+                    ) %>% 
+  relocate(publico, .before=everything())
+
+acredita_base %>% 
+  write_sav(here("data/bases_finales/acredita_base.sav"))
+
+dic_acredita_base<-
+  acredita_base %>%
+  labelled::look_for() %>% 
+  as.data.frame() %>% 
+  select(-levels) %>% 
+  mutate(across(everything(), ~as.character(.)))
+
+dic_acredita_base %>% 
+  export(here("data/bases_finales/diccionario_acredita_base.xlsx"),
+         asTable=TRUE,
+         overwrite=TRUE)
+```
